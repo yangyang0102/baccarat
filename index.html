@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>百家主注助手（離線）</title>
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#111111" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;margin:0;background:#0b0b0b;color:#f1f1f1}
+    header{padding:16px 16px 8px;border-bottom:1px solid #222;background:#0f0f0f;position:sticky;top:0}
+    h1{font-size:18px;margin:0 0 6px}
+    .sub{font-size:13px;color:#bdbdbd;line-height:1.35}
+    main{padding:16px;max-width:760px;margin:0 auto}
+    .card{background:#111;border:1px solid #222;border-radius:12px;padding:14px;margin-bottom:12px}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    input[type=text]{flex:1;min-width:240px;background:#0c0c0c;border:1px solid #2a2a2a;color:#fff;border-radius:10px;padding:12px;font-size:16px}
+    button{background:#1b1b1b;border:1px solid #2a2a2a;color:#fff;border-radius:10px;padding:12px 14px;font-size:15px}
+    button.primary{background:#2a2a2a}
+    button:active{transform:translateY(1px)}
+    .hint{font-size:13px;color:#bdbdbd;margin-top:8px;line-height:1.35}
+    .kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .kpi .box{border:1px solid #222;border-radius:12px;padding:12px;background:#0e0e0e}
+    .kpi .label{font-size:12px;color:#bdbdbd}
+    .kpi .value{font-size:18px;margin-top:6px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .log{max-height:340px;overflow:auto;border:1px solid #222;border-radius:12px;padding:10px;background:#0e0e0e}
+    .line{padding:8px;border-bottom:1px dashed #222}
+    .line:last-child{border-bottom:0}
+    .pill{display:inline-block;padding:2px 8px;border-radius:999px;border:1px solid #333;background:#141414;margin-left:6px;font-size:12px;color:#cfcfcf}
+    .good{border-color:#2f6b2f}
+    .bad{border-color:#6b2f2f}
+    .muted{color:#bdbdbd}
+    a{color:#9ad1ff}
+  </style>
+</head>
+<body>
+<header>
+  <h1>百家主注助手（離線版）</h1>
+  <div class="sub">
+    輸入格式：<span class="mono">閒牌用.分隔</span> 空白 <span class="mono">莊牌用.分隔</span><br/>
+    牌面：<span class="mono">1=A</span>、<span class="mono">11=J</span>、<span class="mono">12=Q</span>、<span class="mono">13=K</span>（10/J/Q/K點數=0）<br/>
+    指令：<span class="mono">undo</span> / <span class="mono">redo</span> / <span class="mono">reset</span>（此頁也有按鈕）
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <div class="row">
+      <input id="handInput" type="text" placeholder="例：12.12.6 10.12.9" autocomplete="off" autocapitalize="off" spellcheck="false" />
+      <button class="primary" id="submitBtn">送出</button>
+      <button id="undoBtn">undo</button>
+      <button id="redoBtn">redo</button>
+      <button id="resetBtn">reset</button>
+      <button id="clearBtn">清除紀錄</button>
+    </div>
+    <div class="hint">
+      你也可以在輸入框直接打：<span class="mono">undo</span>、<span class="mono">redo</span>、<span class="mono">reset</span>、<span class="mono">clear</span>。
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="kpi">
+      <div class="box">
+        <div class="label">目前第幾局</div>
+        <div class="value" id="handNo">0</div>
+      </div>
+      <div class="box">
+        <div class="label">結果統計（莊 / 閒 / 和）</div>
+        <div class="value" id="wlt">0 / 0 / 0</div>
+      </div>
+      <div class="box">
+        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 推 / 略過）</div>
+        <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
+      </div>
+      <div class="box">
+        <div class="label">本局輸出</div>
+        <div class="value mono" id="lastOut">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label muted" style="margin-bottom:8px;">紀錄（最新在上）</div>
+    <div class="log" id="log"></div>
+    <div class="hint">
+      離線安裝：Safari 開啟後 → 分享 →「加入主畫面」。首次需要有網路/HTTPS載入一次，之後可離線使用。
+    </div>
+  </div>
+</main>
+
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
+</script>
+</body>
+</html>
