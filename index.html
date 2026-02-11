@@ -62,7 +62,35 @@
     <div class="hint">
       你也可以在輸入框直接打：<span class="mono">undo</span>、<span class="mono">redo</span>、<span class="mono">reset</span>、<span class="mono">clear</span>。
     </div>
+  
+  <div class="card" id="keypadCard">
+    <div class="label" style="margin-bottom:8px;">按鈕輸入（可選用）</div>
+    <div class="row" style="margin-bottom:10px;">
+      <button id="sidePlayer" class="primary">正在輸入：閒</button>
+      <button id="sideBanker">切換到：莊</button>
+      <button id="bkspBtn">退一張</button>
+      <button id="clearSideBtn">清空此方</button>
+    </div>
+    <div class="row" style="gap:8px;">
+      <div class="box" style="flex:1;min-width:240px;">
+        <div class="label">閒牌</div>
+        <div class="value mono" id="pCardsDisp">（空）</div>
+      </div>
+      <div class="box" style="flex:1;min-width:240px;">
+        <div class="label">莊牌</div>
+        <div class="value mono" id="bCardsDisp">（空）</div>
+      </div>
+    </div>
+
+    <div class="hint" style="margin-top:10px;">點牌面加入（1=A、11=J、12=Q、13=K、10=10）。每局輸入完按「送出」。</div>
+    <div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
+
+    <div class="row" style="margin-top:10px;">
+      <button class="primary" id="submitKeypadBtn">送出（用按鈕輸入）</button>
+      <button id="clearBothBtn">全部清空</button>
+    </div>
   </div>
+</div>
 
   <div class="card">
     <div class="kpi">
@@ -75,12 +103,22 @@
         <div class="value" id="wlt">0 / 0 / 0</div>
       </div>
       <div class="box">
-        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 推 / 略過）</div>
+        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）</div>
         <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
       </div>
       <div class="box">
-        <div class="label">本局輸出</div>
+        <div class="label">本局勝利</div>
+        <div class="value mono" id="thisWin">—</div>
+      </div>
+      <div class="box">
+        <div class="label">下局建議下注</div>
+        <div class="value mono" id="nextPick">—</div>
+      </div>
+      <div class="box">
+        <div class="label">提示</div>
         <div class="value mono" id="lastOut">—</div>
+      </div>
+</div>
       </div>
     </div>
   </div>

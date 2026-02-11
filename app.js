@@ -1,7 +1,9 @@
-// 百家主注助手（離線）
-// 只保留你 Excel 那套：HV/AG/TP -> 主注建議（莊/閒/看一局）
-// 並保留：局數、莊/閒/和統計、以及「照建議押」的勝負統計
-// plus: undo/redo/reset
+// 百家主注助手（離線）v3
+// 只保留你 Excel 那套：HV/AG/TP -> 「下局」主注建議（莊/閒/看一局）
+// 修正：主注統計「贏/輸/和/略過」會用「上一局的建議」去對照「本局開牌結果」
+//
+// 指令：undo / redo / reset / clear
+// UI：可用文字輸入，也可用按鈕輸入（閒/莊切換 + 1~13）
 
 const HV_MAP = {1:9, 2:8, 3:7, 4:6, 5:5, 6:1, 7:3, 8:2, 9:2};
 const AG_MAP = {0:-4, 1:-5, 2:-5, 3:-2, 4:-1, 5:-1, 6:3, 7:4, 8:5, 9:6};
@@ -46,16 +48,25 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const STORAGE_KEY = "baccarat_main_only_v1";
+const STORAGE_KEY = "baccarat_main_only_v3";
 
 function newState(){
   return {
     prevP: null,
     prevB: null,
-    stats: {handNo:0, bankerWins:0, playerWins:0, ties:0, pickWins:0, pickLosses:0, pickPushes:0, pickSkipped:0},
+    pendingPick: null, // 上一局產生的「下局建議」，等待本局結算
+
+    stats: {
+      handNo:0,
+      bankerWins:0, playerWins:0, ties:0,
+      pickWins:0, pickLosses:0, pickTies:0, pickSkipped:0
+    },
+
     log: [],
     undo: [],
-    redo: []
+    redo: [],
+
+    keypad: { side: "P", p: [], b: [] } // side: "P" or "B"
   };
 }
 
@@ -73,25 +84,22 @@ function loadState(){
 }
 
 function snapshot(){
-  return { prevP: state.prevP, prevB: state.prevB, stats: deepClone(state.stats), log: deepClone(state.log) };
+  return {
+    prevP: state.prevP,
+    prevB: state.prevB,
+    pendingPick: state.pendingPick,
+    stats: deepClone(state.stats),
+    log: deepClone(state.log),
+    keypad: deepClone(state.keypad)
+  };
 }
 function restore(snap){
   state.prevP = snap.prevP;
   state.prevB = snap.prevB;
+  state.pendingPick = snap.pendingPick;
   state.stats = deepClone(snap.stats);
   state.log = deepClone(snap.log);
-}
-
-function applyPickResult(pick, win){
-  const st = state.stats;
-  if (!pick || pick === "看一局"){
-    st.pickSkipped += 1; return;
-  }
-  if (win === "和"){
-    st.pickPushes += 1; return;
-  }
-  if (pick === win) st.pickWins += 1;
-  else st.pickLosses += 1;
+  state.keypad = deepClone(snap.keypad ?? {side:"P",p:[],b:[]});
 }
 
 function applyHandResult(win){
@@ -102,7 +110,27 @@ function applyHandResult(win){
   else st.ties += 1;
 }
 
-function excelLikeTPandPick(pRanks, bRanks){
+function settlePendingPick(win){
+  const st = state.stats;
+  const pick = state.pendingPick;
+  if (!pick || pick === "看一局"){
+    st.pickSkipped += 1;
+    return {evaluated: pick ?? "（無）", result: "略過"};
+  }
+  if (win === "和"){
+    st.pickTies += 1;
+    return {evaluated: pick, result: "和"};
+  }
+  if (pick === win){
+    st.pickWins += 1;
+    return {evaluated: pick, result: "贏"};
+  }else{
+    st.pickLosses += 1;
+    return {evaluated: pick, result: "輸"};
+  }
+}
+
+function excelNextPick(pRanks, bRanks){
   const pTotal = handTotal(pRanks);
   const bTotal = handTotal(bRanks);
 
@@ -125,11 +153,10 @@ function excelLikeTPandPick(pRanks, bRanks){
     else pick = "看一局";
   }
 
-  // 更新上一手
   state.prevP = pTotal;
   state.prevB = bTotal;
 
-  return {pTotal, bTotal, tpP, tpB, pick};
+  return {pTotal, bTotal, tpP, tpB, nextPick: pick};
 }
 
 function fmt(x){
@@ -139,10 +166,15 @@ function fmt(x){
 
 function addLogLine(obj){
   state.log.unshift(obj);
-  // 最多留 200 行，避免localStorage爆掉
   if (state.log.length > 200) state.log.length = 200;
 }
 
+function setText(id, text){
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+// ---- commands ----
 function cmdUndo(){
   if (!state.undo.length) return {ok:false, msg:"沒有可撤銷的紀錄"};
   state.redo.push(snapshot());
@@ -157,22 +189,20 @@ function cmdRedo(){
   restore(snap);
   return {ok:true, msg:"已復原（redo）"};
 }
-
-function cmdClearLog(){
-  state.log = [];
-  setLastOut("已清除紀錄（log）");
-  saveState();
-  render();
-  return {ok:true, msg:"已清除紀錄（log）"};
-}
-
 function cmdReset(){
   state = newState();
   saveState();
   render();
   return {ok:true, msg:"已重置（新靴/新一輪）"};
 }
+function cmdClearLog(){
+  state.log = [];
+  saveState();
+  render();
+  return {ok:true, msg:"已清除紀錄（log）"};
+}
 
+// ---- submit ----
 function submit(line){
   const parsed = parseHand(line);
   if (!parsed) return;
@@ -184,24 +214,31 @@ function submit(line){
     else if (parsed.cmd==="clear") r = cmdClearLog();
     else r = {ok:true, msg:""};
     if (parsed.cmd!=="reset"){
-      if (r.msg) setLastOut(r.msg);
+      if (r.msg) setText("lastOut", r.msg);
       saveState(); render();
     }
     return;
   }
 
-  // 新輸入會讓 redo 失效
   state.redo = [];
-
-  // 存「輸入前」狀態到 undo
   state.undo.push(snapshot());
 
   const {p,b} = parsed;
-  const res = excelLikeTPandPick(p,b);
-  const win = winnerLabel(res.pTotal, res.bTotal);
 
+  // 本局結果
+  const pTotal = handTotal(p);
+  const bTotal = handTotal(b);
+  const win = winnerLabel(pTotal, bTotal);
+
+  // 結算上一局建議（對照本局）
+  const settled = settlePendingPick(win);
+
+  // 記入本局統計
   applyHandResult(win);
-  applyPickResult(res.pick, win);
+
+  // 產生下局建議
+  const res = excelNextPick(p,b);
+  state.pendingPick = res.nextPick;
 
   addLogLine({
     n: state.stats.handNo,
@@ -209,54 +246,139 @@ function submit(line){
     pTotal: res.pTotal,
     bTotal: res.bTotal,
     win,
+    prevPick: settled.evaluated,
+    prevPickResult: settled.result,
+    nextPick: res.nextPick ?? "（前兩手不足）",
     tpP: res.tpP,
     tpB: res.tpB,
-    pick: res.pick ?? "（前兩手不足）",
     ts: Date.now()
   });
 
-  setLastOut(`第${state.stats.handNo}局｜勝利=${win}｜建議=${res.pick ?? "（前兩手不足）"}`);
+  setText("thisWin", win);
+  setText("nextPick", res.nextPick ?? "（前兩手不足）");
+  setText("lastOut", win);
+
   saveState();
   render();
 }
 
-function setLastOut(text){
-  document.getElementById("lastOut").textContent = text;
-}
-
-// ===== UI =====
+// ---- UI render ----
 function render(){
   const st = state.stats;
-  document.getElementById("handNo").textContent = st.handNo.toString();
-  document.getElementById("wlt").textContent = `${st.bankerWins} / ${st.playerWins} / ${st.ties}`;
-  document.getElementById("pickStats").textContent = `${st.pickWins} / ${st.pickLosses} / ${st.pickPushes} / ${st.pickSkipped}`;
+  setText("handNo", st.handNo.toString());
+  setText("wlt", `${st.bankerWins} / ${st.playerWins} / ${st.ties}`);
+  setText("pickStats", `${st.pickWins} / ${st.pickLosses} / ${st.pickTies} / ${st.pickSkipped}`);
+
+  if (!state.log.length){
+    setText("thisWin", "—");
+    setText("nextPick", state.pendingPick ?? "—");
+    setText("lastOut", "—");
+  }else{
+    setText("thisWin", state.log[0].win);
+    setText("nextPick", state.log[0].nextPick);
+    setText("lastOut", state.log[0].win);
+  }
 
   const logEl = document.getElementById("log");
-  logEl.innerHTML = "";
-  for (const row of state.log){
-    const div = document.createElement("div");
-    div.className = "line";
-    const pillClass = row.win==="莊家" ? "good" : (row.win==="閒家" ? "bad" : "");
-    div.innerHTML = `
-      <div class="mono">
-        <b>第${row.n}局</b>
-        <span class="pill ${pillClass}">${row.win}</span>
-        <span class="pill">${row.pick}</span>
-      </div>
-      <div class="mono muted" style="margin-top:6px;">
-        輸入：${escapeHtml(row.input)}<br/>
-        點數：閒=${row.pTotal} 莊=${row.bTotal}<br/>
-        TP：閒=${row.tpP==null?"（無）":escapeHtml(fmt(row.tpP))} ｜ 莊=${row.tpB==null?"（無）":escapeHtml(fmt(row.tpB))}
-      </div>
-    `;
-    logEl.appendChild(div);
+  if (logEl){
+    logEl.innerHTML = "";
+    for (const row of state.log){
+      const div = document.createElement("div");
+      div.className = "line";
+      const pillClass = row.win==="莊家" ? "good" : (row.win==="閒家" ? "bad" : "");
+      div.innerHTML = `
+        <div class="mono">
+          <b>第${row.n}局</b>
+          <span class="pill ${pillClass}">${row.win}</span>
+          <span class="pill">上局建議：${row.prevPick}</span>
+          <span class="pill">結果：${row.prevPickResult}</span>
+          <span class="pill">下局：${row.nextPick}</span>
+        </div>
+        <div class="mono muted" style="margin-top:6px;">
+          輸入：${escapeHtml(row.input)}<br/>
+          點數：閒=${row.pTotal} 莊=${row.bTotal}<br/>
+          TP：閒=${row.tpP==null?"（無）":escapeHtml(fmt(row.tpP))} ｜ 莊=${row.tpB==null?"（無）":escapeHtml(fmt(row.tpB))}
+        </div>
+      `;
+      logEl.appendChild(div);
+    }
   }
+
+  renderKeypad();
 }
 
 function escapeHtml(s){
   return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
 
+// ---- keypad UI ----
+function renderKeypad(){
+  setText("pCardsDisp", state.keypad.p.length ? state.keypad.p.join(".") : "（空）");
+  setText("bCardsDisp", state.keypad.b.length ? state.keypad.b.join(".") : "（空）");
+
+  const sideP = document.getElementById("sidePlayer");
+  const sideB = document.getElementById("sideBanker");
+  if (sideP && sideB){
+    if (state.keypad.side === "P"){
+      sideP.classList.add("primary");
+      sideP.textContent = "正在輸入：閒";
+      sideB.classList.remove("primary");
+      sideB.textContent = "切換到：莊";
+    }else{
+      sideB.classList.add("primary");
+      sideB.textContent = "正在輸入：莊";
+      sideP.classList.remove("primary");
+      sideP.textContent = "切換到：閒";
+    }
+  }
+
+  const pad = document.getElementById("cardPad");
+  if (pad && !pad.dataset.ready){
+    const labels = [
+      {v:1, t:"A(1)"},{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},
+      {v:6,t:"6"},{v:7,t:"7"},{v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},
+      {v:11,t:"J(11)"},{v:12,t:"Q(12)"},{v:13,t:"K(13)"}
+    ];
+    for (const it of labels){
+      const btn = document.createElement("button");
+      btn.textContent = it.t;
+      btn.addEventListener("click", ()=>{
+        if (state.keypad.side === "P") state.keypad.p.push(it.v);
+        else state.keypad.b.push(it.v);
+        saveState();
+        renderKeypad();
+      });
+      pad.appendChild(btn);
+    }
+    pad.dataset.ready = "1";
+  }
+}
+
+function keypadBackspace(){
+  const arr = (state.keypad.side === "P") ? state.keypad.p : state.keypad.b;
+  if (arr.length) arr.pop();
+}
+function keypadClearSide(){
+  if (state.keypad.side === "P") state.keypad.p = [];
+  else state.keypad.b = [];
+}
+function keypadClearBoth(){
+  state.keypad.p = [];
+  state.keypad.b = [];
+}
+function keypadSubmit(){
+  if (!state.keypad.p.length || !state.keypad.b.length){
+    alert("請先用按鈕輸入閒牌與莊牌（兩邊都要有）");
+    return;
+  }
+  const line = `${state.keypad.p.join(".")} ${state.keypad.b.join(".")}`;
+  submit(line);
+  keypadClearBoth();
+  saveState();
+  render();
+}
+
+// ---- bind DOM ----
 document.getElementById("submitBtn").addEventListener("click", ()=>{
   const v = document.getElementById("handInput").value;
   document.getElementById("handInput").value = "";
@@ -270,23 +392,42 @@ document.getElementById("handInput").addEventListener("keydown", (e)=>{
   }
 });
 document.getElementById("undoBtn").addEventListener("click", ()=>{
-  const r = cmdUndo(); if (!r.ok) alert(r.msg); else setLastOut(r.msg);
+  const r = cmdUndo(); if (!r.ok) alert(r.msg); else setText("lastOut", r.msg);
   saveState(); render();
 });
 document.getElementById("redoBtn").addEventListener("click", ()=>{
-  const r = cmdRedo(); if (!r.ok) alert(r.msg); else setLastOut(r.msg);
+  const r = cmdRedo(); if (!r.ok) alert(r.msg); else setText("lastOut", r.msg);
   saveState(); render();
 });
 document.getElementById("resetBtn").addEventListener("click", ()=>{
   if (!confirm("確定要重置嗎？（新靴/洗牌用）")) return;
-  const r = cmdReset(); setLastOut(r.msg);
+  const r = cmdReset(); setText("lastOut", r.msg);
+});
+document.getElementById("clearBtn").addEventListener("click", ()=>{
+  if (!confirm("確定要清除紀錄嗎？（只清 log，不影響局數/統計）")) return;
+  const r = cmdClearLog(); setText("lastOut", r.msg);
+});
+
+document.getElementById("sidePlayer").addEventListener("click", ()=>{
+  state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
+  saveState(); renderKeypad();
+});
+document.getElementById("sideBanker").addEventListener("click", ()=>{
+  state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
+  saveState(); renderKeypad();
+});
+document.getElementById("bkspBtn").addEventListener("click", ()=>{
+  keypadBackspace(); saveState(); renderKeypad();
+});
+document.getElementById("clearSideBtn").addEventListener("click", ()=>{
+  keypadClearSide(); saveState(); renderKeypad();
+});
+document.getElementById("clearBothBtn").addEventListener("click", ()=>{
+  keypadClearBoth(); saveState(); renderKeypad();
+});
+document.getElementById("submitKeypadBtn").addEventListener("click", ()=>{
+  try{ keypadSubmit(); }catch(e){ alert(e.message || String(e)); }
 });
 
 // 初次載入
 render();
-
-
-document.getElementById("clearBtn").addEventListener("click", ()=>{
-  if (!confirm("確定要清除紀錄嗎？（只清 log，不影響局數/統計）")) return;
-  cmdClearLog();
-});
