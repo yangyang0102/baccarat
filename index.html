@@ -92,6 +92,58 @@ button.primary{
 .win-player { color: #1e88e5; }
 .win-tie    { color: #ffd54f; }
 
+
+/* === UI polish v12 === */
+
+/* KPI 區塊排版優化（手機更整齊） */
+.kpi{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+.kpi .box{
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  min-height:92px;
+}
+.kpi .label{
+  font-size:12px;
+  letter-spacing:.2px;
+}
+.kpi .value{
+  margin-top:10px;
+  font-size:20px;
+  line-height:1.1;
+}
+.kpi .wide{ grid-column: 1 / -1; }
+
+#pickStats, #wlt{
+  font-variant-numeric: tabular-nums;
+}
+
+/* 小螢幕改單欄，避免擠在一起 */
+@media (max-width: 420px){
+  .kpi{ grid-template-columns: 1fr; }
+  .kpi .box{ min-height:84px; }
+}
+
+button:disabled{
+  opacity:.45;
+  filter:saturate(.6);
+}
+
+/* 畫面內訊息（取代 alert） */
+.msg{
+  margin-top:10px;
+  font-size:13px;
+  line-height:1.35;
+  color:#ffb4b4;
+  display:none;
+}
+.msg.show{ display:block; }
+.msg.ok{ color:#b7ffbf; }
+
 </style>
 </head>
 <body>
@@ -108,6 +160,7 @@ button.primary{
       <button id="resetBtn">重置牌靴🔄</button>
       <button id="clearBtn">清除紀錄</button>
     </div>
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
     <div class="hint">
       你也可以在輸入框直接打：<span class="mono">撤回↪️</span>、<span class="mono">恢復↩️</span>、<span class="mono">重置牌靴🔄</span>、<span class="mono">clear</span>。
     </div>

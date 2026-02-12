@@ -169,19 +169,27 @@ function addLogLine(obj){
   if (state.log.length > 200) state.log.length = 200;
 }
 
+
+function showMsg(text, ok=false){
+  const el = document.getElementById("msg");
+  if (!el) return;
+  el.textContent = text;
+  el.classList.add("show");
+  el.classList.toggle("ok", !!ok);
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.classList.remove("show"); }, 3000);
+}
+function clearMsg(){
+  const el = document.getElementById("msg");
+  if (!el) return;
+  el.classList.remove("show");
+}
+
 function setText(id, text){
   const el = document.getElementById(id);
   if (el) el.textContent = text;
 }
 
-function applyThemeByPick(pick){
-  const body = document.body;
-  if (!body) return;
-  body.classList.remove("theme-banker","theme-player","theme-neutral");
-  if (pick === "莊家") body.classList.add("theme-banker");
-  else if (pick === "閒家") body.classList.add("theme-player");
-  else body.classList.add("theme-neutral");
-}
 
 
 // ---- commands ----
@@ -286,9 +294,7 @@ function render(){
 
   if (!state.log.length){
     setText("thisWin", "—");
-    setText("nextPick", state.pendingPick ?? "—");
-    applyThemeByPick(state.pendingPick);
-    setText("lastOut", "—");
+    setText("nextPick", state.pendingPick ?? "—");    setText("lastOut", "—");
   }else{
     setText("thisWin", state.log[0].win);
     const nextPickEl = document.getElementById("nextPick");
@@ -297,9 +303,7 @@ nextPickEl.textContent = pick;
 nextPickEl.classList.remove("pick-banker","pick-player","pick-skip");
 if (pick === "莊家") nextPickEl.classList.add("pick-banker");
 else if (pick === "閒家") nextPickEl.classList.add("pick-player");
-else if (pick === "看一局") nextPickEl.classList.add("pick-skip");
-    applyThemeByPick(state.log[0].nextPick);
-    setText("lastOut", state.log[0].win);
+else if (pick === "看一局") nextPickEl.classList.add("pick-skip");    setText("lastOut", state.log[0].win);
   }
 
   const logEl = document.getElementById("log");
@@ -312,10 +316,10 @@ else if (pick === "看一局") nextPickEl.classList.add("pick-skip");
       div.innerHTML = `
         <div class="mono">
           <b>第${row.n}局</b>
-          <span class="pill ${pillClass}">${row.win}</span>
-          <span class="pill">上局建議：${row.prevPick}</span>
+          <span class="pill ${pillClass}">${markWin(row.win)} ${row.win}</span>
+          <span class="pill">上局建議：${markPick(row.prevPick)} ${row.prevPick}</span>
           <span class="pill">結果：${row.prevPickResult}</span>
-          <span class="pill">下局：${row.nextPick}</span>
+          <span class="pill">下局：${markPick(row.nextPick)} ${row.nextPick}</span>
         </div>
         <div class="mono muted" style="margin-top:6px;">
           輸入：${escapeHtml(row.input)}<br/>
@@ -328,11 +332,30 @@ else if (pick === "看一局") nextPickEl.classList.add("pick-skip");
   }
 
   renderKeypad();
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
 }
+
 
 function escapeHtml(s){
   return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
 }
+
+function markWin(w){
+  if (w==="莊家") return "🔴B";
+  if (w==="閒家") return "🔵P";
+  return "🟡T";
+}
+function markPick(p){
+  if (p==="莊家") return "🔴B";
+  if (p==="閒家") return "🔵P";
+  if (p==="看一局") return "🟢WAIT";
+  return "—";
+}
+
 
 // ---- keypad UI ----
 function renderKeypad(){
@@ -405,13 +428,13 @@ function keypadSubmit(){
 document.getElementById("submitBtn").addEventListener("click", ()=>{
   const v = document.getElementById("handInput").value;
   document.getElementById("handInput").value = "";
-  try{ submit(v); }catch(e){ alert(e.message || String(e)); }
+  try{ submit(v); clearMsg(); }catch(e){ showMsg(e.message || String(e), false); }
 });
 document.getElementById("handInput").addEventListener("keydown", (e)=>{
   if (e.key === "Enter"){
     const v = document.getElementById("handInput").value;
     document.getElementById("handInput").value = "";
-    try{ submit(v); }catch(err){ alert(err.message || String(err)); }
+    try{ submit(v); clearMsg(); }catch(err){ showMsg(err.message || String(err), false); }
   }
 });
 document.getElementById("undoBtn").addEventListener("click", ()=>{
@@ -423,33 +446,63 @@ document.getElementById("redoBtn").addEventListener("click", ()=>{
   saveState(); render();
 });
 document.getElementById("resetBtn").addEventListener("click", ()=>{
-  if (!confirm("確定要重置嗎？（新靴/洗牌用）")) return;
+  if (!confirm("確定要重置牌靴嗎？會清空局數、統計、以及下局建議（相當於洗牌/新靴）。")) return;
   const r = cmdReset(); setText("lastOut", r.msg);
 });
 document.getElementById("clearBtn").addEventListener("click", ()=>{
-  if (!confirm("確定要清除紀錄嗎？（只清除最下方紀錄，不影響局數/統計）")) return;
+  if (!confirm("確定只清除下方紀錄（log）嗎？局數與統計不會改變。")) return;
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
 document.getElementById("sidePlayer").addEventListener("click", ()=>{
   state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
   saveState(); renderKeypad();
-});
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
+}
+);
 document.getElementById("sideBanker").addEventListener("click", ()=>{
   state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
   saveState(); renderKeypad();
-});
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
+}
+);
 document.getElementById("bkspBtn").addEventListener("click", ()=>{
   keypadBackspace(); saveState(); renderKeypad();
-});
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
+}
+);
 document.getElementById("clearSideBtn").addEventListener("click", ()=>{
   keypadClearSide(); saveState(); renderKeypad();
-});
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
+}
+);
 document.getElementById("clearBothBtn").addEventListener("click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
-});
+
+  const undoBtn = document.getElementById("undoBtn");
+  const redoBtn = document.getElementById("redoBtn");
+  if (undoBtn) undoBtn.disabled = !state.undo.length;
+  if (redoBtn) redoBtn.disabled = !state.redo.length;
+}
+);
 document.getElementById("submitKeypadBtn").addEventListener("click", ()=>{
-  try{ keypadSubmit(); }catch(e){ alert(e.message || String(e)); }
+  try{ keypadSubmit(); clearMsg(); }catch(e){ showMsg(e.message || String(e), false); }
 });
 
 // 初次載入
