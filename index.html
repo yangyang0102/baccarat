@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>豪樂百家輔助系統</title>
+  <title>百家主注助手（離線）</title>
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#111111" />
@@ -39,6 +39,48 @@
     a{color:#9ad1ff}
   
 .kpi .wide{grid-column: span 2;}
+
+/* --- 主色主題（莊=紅、閒=藍、看一局=中性灰；金色點綴） --- */
+:root{
+  --accent:#3a3a3a;         /* 中性 */
+  --gold:#ffdd55;           /* 亮金 */
+  --accentBg:rgba(255,255,255,.04);
+  --accentBorder:rgba(255,255,255,.10);
+}
+body.theme-banker{
+  --accent:#d32f2f;         /* 莊=紅 */
+  --gold:#ffdd55;
+  --accentBg:rgba(211,47,47,.12);
+  --accentBorder:rgba(211,47,47,.32);
+}
+body.theme-player{
+  --accent:#1e88e5;         /* 閒=藍 */
+  --gold:#ffdd55;
+  --accentBg:rgba(30,136,229,.12);
+  --accentBorder:rgba(30,136,229,.32);
+}
+body.theme-neutral{
+  --accent:#3a3a3a;
+  --gold:#ffdd55;
+  --accentBg:rgba(255,255,255,.04);
+  --accentBorder:rgba(255,255,255,.10);
+}
+
+/* 套用到既有 UI：克制、工具感 */
+header{ border-bottom-color: var(--accentBorder); }
+.card{ border-color: var(--accentBorder); }
+.kpi .box{ border-color: var(--accentBorder); }
+.pill{ border-color: var(--accentBorder); }
+
+/* 讓「送出」更跟主色走（不閃、不花） */
+button.primary{
+  border-color: var(--accentBorder);
+  background: linear-gradient(180deg, var(--accentBg), rgba(0,0,0,.22));
+}
+
+/* 下局建議：金色點綴 */
+#nextPick{ color: var(--gold); }
+
 </style>
 </head>
 <body>
@@ -56,7 +98,8 @@
       <button id="clearBtn">清除紀錄</button>
     </div>
     <div class="hint">
-    
+      你也可以在輸入框直接打：<span class="mono">撤回↪️</span>、<span class="mono">恢復↩️</span>、<span class="mono">重置牌靴🔄</span>、<span class="mono">clear</span>。
+    </div>
   
   <div class="card" id="keypadCard">
     <div class="label" style="margin-bottom:8px;">按鈕輸入（可選用）</div>

@@ -1,4 +1,4 @@
-// 豪樂百家輔助程式 v9
+// 百家主注助手（離線）v3
 // 只保留你 Excel 那套：HV/AG/TP -> 「下局」主注建議（莊/閒/看一局）
 // 修正：主注統計「贏/輸/和/略過」會用「上一局的建議」去對照「本局開牌結果」
 //
@@ -48,7 +48,7 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const STORAGE_KEY = "baccarat_main_only_v9";
+const STORAGE_KEY = "baccarat_main_only_v3";
 
 function newState(){
   return {
@@ -174,6 +174,16 @@ function setText(id, text){
   if (el) el.textContent = text;
 }
 
+function applyThemeByPick(pick){
+  const body = document.body;
+  if (!body) return;
+  body.classList.remove("theme-banker","theme-player","theme-neutral");
+  if (pick === "莊家") body.classList.add("theme-banker");
+  else if (pick === "閒家") body.classList.add("theme-player");
+  else body.classList.add("theme-neutral");
+}
+
+
 // ---- commands ----
 function cmdUndo(){
   if (!state.undo.length) return {ok:false, msg:"沒有可撤銷的紀錄"};
@@ -272,10 +282,12 @@ function render(){
   if (!state.log.length){
     setText("thisWin", "—");
     setText("nextPick", state.pendingPick ?? "—");
+    applyThemeByPick(state.pendingPick);
     setText("lastOut", "—");
   }else{
     setText("thisWin", state.log[0].win);
     setText("nextPick", state.log[0].nextPick);
+    applyThemeByPick(state.log[0].nextPick);
     setText("lastOut", state.log[0].win);
   }
 
