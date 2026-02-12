@@ -144,6 +144,30 @@ button:disabled{
 .msg.show{ display:block; }
 .msg.ok{ color:#b7ffbf; }
 
+
+.ver{
+  font-size:12px;
+  opacity:.65;
+  margin-left:6px;
+  font-weight:500;
+}
+.subnote{
+  margin-left:6px;
+  font-size:12px;
+  opacity:.7;
+  white-space:nowrap;
+}
+.danger-row{
+  margin-top:12px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.danger-row button{
+  opacity:.85;
+}
 </style>
 </head>
 <body>
@@ -162,7 +186,6 @@ button:disabled{
     </div>
     <div id="msg" class="msg" role="status" aria-live="polite"></div>
     <div class="hint">
-      你也可以在輸入框直接打：<span class="mono">撤回↪️</span>、<span class="mono">恢復↩️</span>、<span class="mono">重置牌靴🔄</span>、<span class="mono">clear</span>。
     </div>
   
   <div class="card" id="keypadCard">
@@ -188,7 +211,7 @@ button:disabled{
     <div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
 
     <div class="row" style="margin-top:10px;">
-      <button class="primary" id="submitKeypadBtn">送出（用按鈕輸入）</button>
+      <button class="primary" id="submitKeypadBtn">送出</button>
       <button id="clearBothBtn">全部清空</button>
     </div>
   </div>
@@ -213,7 +236,7 @@ button:disabled{
         <div class="value" id="wlt">0 / 0 / 0</div>
       </div>
       <div class="box">
-        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）</div>
+        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）<span class="subnote">（以「上一局建議」結算）</span></div>
         <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
       </div>
 </div>
@@ -226,7 +249,6 @@ button:disabled{
     <div class="label muted" style="margin-bottom:8px;">紀錄（最新在上）</div>
     <div class="log" id="log"></div>
     <div class="hint">
-      離線安裝：Safari 開啟後 → 分享 →「加入主畫面」。首次需要有網路/HTTPS載入一次，之後可離線使用。
     </div>
   </div>
 </main>

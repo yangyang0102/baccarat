@@ -1,4 +1,4 @@
-// 百家主注助手（離線）v3
+// 百家主注助手（離線）v13
 // 只保留你 Excel 那套：HV/AG/TP -> 「下局」主注建議（莊/閒/看一局）
 // 修正：主注統計「贏/輸/和/略過」會用「上一局的建議」去對照「本局開牌結果」
 //
@@ -161,7 +161,9 @@ function excelNextPick(pRanks, bRanks){
 
 function fmt(x){
   if (x==null) return "（無）";
-  return (Math.round(x*1e6)/1e6).toString();
+  const n = Number(x);
+  if (!Number.isFinite(n)) return "（無）";
+  return n.toFixed(2);
 }
 
 function addLogLine(obj){
@@ -311,12 +313,10 @@ else if (pick === "看一局") nextPickEl.classList.add("pick-skip");    setText
     logEl.innerHTML = "";
     for (const row of state.log){
       const div = document.createElement("div");
-      div.className = "line";
-      const pillClass = row.win==="莊家" ? "good" : (row.win==="閒家" ? "bad" : "");
-      div.innerHTML = `
+      div.className = "line";      div.innerHTML = `
         <div class="mono">
           <b>第${row.n}局</b>
-          <span class="pill ${pillClass}">${markWin(row.win)} ${row.win}</span>
+          <span class="pill">本局勝利：${row.win}</span>
           <span class="pill">上局建議：${markPick(row.prevPick)} ${row.prevPick}</span>
           <span class="pill">結果：${row.prevPickResult}</span>
           <span class="pill">下局：${markPick(row.nextPick)} ${row.nextPick}</span>
