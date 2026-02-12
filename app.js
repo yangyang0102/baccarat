@@ -48,7 +48,7 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const STORAGE_KEY = "baccarat_main_only_v3";
+const STORAGE_KEY = "baccarat_main_only_v9";
 
 function newState(){
   return {
