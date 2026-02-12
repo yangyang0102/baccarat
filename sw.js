@@ -1,8 +1,9 @@
-const CACHE_NAME = "baccarat-main-only-v13";
+const CACHE_NAME = "baccarat-main-only-v14";
 const ASSETS = [
   "./",
   "./index.html",
   "./app.js",
+  "./engine.js",
   "./manifest.json",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
@@ -26,15 +27,39 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  event.respondWith((async ()=>{
-    const cached = await caches.match(event.request);
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // Network-first for HTML (avoid stale UI after deploy), cache-first for others.
+  const isHTML = req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html") || url.pathname.endsWith("/index.html");
+
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE_NAME);
+
+    if (isHTML) {
+      try {
+        const fresh = await fetch(req);
+        cache.put(req, fresh.clone());
+        return fresh;
+      } catch (e) {
+        const cached = await caches.match("./index.html");
+        return cached || Response.error();
+      }
+    }
+
+    const cached = await caches.match(req);
     if (cached) return cached;
-    try{
-      const res = await fetch(event.request);
+
+    try {
+      const res = await fetch(req);
+      // Optionally cache same-origin GETs
+      if (req.method === "GET" && url.origin === self.location.origin) {
+        cache.put(req, res.clone());
+      }
       return res;
-    }catch{
-      // offline fallback
+    } catch (e) {
       return caches.match("./index.html");
     }
   })());
 });
+
