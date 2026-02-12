@@ -168,49 +168,11 @@ button:disabled{
 .danger-row button{
   opacity:.85;
 }
-
-/* v14 UI additions */
-header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-}
-.iconbtn{
-  width:34px;
-  height:34px;
-  border-radius:10px;
-  font-weight:700;
-}
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-  z-index:9999;
-}
-.modal.hidden{ display:none; }
-.modalCard{
-  width:min(420px, 100%);
-  border:1px solid rgba(255,255,255,.12);
-  background:rgba(15,15,15,.95);
-  border-radius:16px;
-  padding:14px;
-}
-.modalTitle{ font-weight:700; margin-bottom:8px; }
-.modalBody{ opacity:.9; line-height:1.7; margin-bottom:12px; }
-.logItem summary{ list-style:none; cursor:pointer; }
-.logItem summary::-webkit-details-marker{ display:none; }
-
 </style>
 </head>
 <body>
 <header>
-  <h1>豪樂百家輔助系統 <span class="ver">v14</span></h1>
-  <button id="helpBtn" class="iconbtn" aria-label="說明">?</button>
+  <h1>百家輔助系統</h1>
   <div class="sub">
     僅供輔助參考，切勿沉迷。
 <div class="card">
@@ -219,8 +181,6 @@ header{
       <button class="primary" id="submitBtn">送出</button>
       <button id="undoBtn">撤回↪️</button>
       <button id="redoBtn">恢復↩️</button>
-    </div>
-    <div class="danger-row">
       <button id="resetBtn">重置牌靴🔄</button>
       <button id="clearBtn">清除紀錄</button>
     </div>
@@ -257,7 +217,7 @@ header{
   </div>
 </div>
 
-  <div class="card" id="kpiCard">
+  <div class="card">
     <div class="kpi">
       <div class="box wide">
         <div class="label">下局建議下注</div>
@@ -293,26 +253,11 @@ header{
   </div>
 </main>
 
-<script src="engine.js"></script>
 <script src="app.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
   }
 </script>
-
-<div id="helpModal" class="modal hidden" role="dialog" aria-modal="true">
-  <div class="modalCard">
-    <div class="modalTitle">快速指令</div>
-    <div class="modalBody">
-      <div>撤回：undo</div>
-      <div>恢復：redo</div>
-      <div>重置牌靴：reset</div>
-      <div>清除紀錄：clear</div>
-    </div>
-    <button id="helpClose" class="primary">關閉</button>
-  </div>
-</div>
-
 </body>
 </html>

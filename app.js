@@ -1,4 +1,4 @@
-// 百家主注助手（離線）v14
+// 百家主注助手（離線）v13
 // 只保留你 Excel 那套：HV/AG/TP -> 「下局」主注建議（莊/閒/看一局）
 // 修正：主注統計「贏/輸/和/略過」會用「上一局的建議」去對照「本局開牌結果」
 //
@@ -12,6 +12,20 @@ function rankToVal(r){
   if (r === 1) return 1;
   if (r >= 2 && r <= 9) return r;
   return 0; // 10/J/Q/K
+}
+function handTotal(ranks){
+  let s = 0;
+  for (const r of ranks) s += rankToVal(r);
+  return s % 10;
+}
+function max1to9(ranks){
+  const vals = [];
+  for (const r of ranks){
+    if (r === 1) vals.push(1);
+    else if (r >= 2 && r <= 9) vals.push(r);
+  }
+  if (!vals.length) return null;
+  return Math.max(...vals);
 }
 function winnerLabel(pTotal, bTotal){
   if (pTotal > bTotal) return "閒家";
@@ -34,8 +48,7 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const APP_VERSION = "v14";
-const STORAGE_KEY = `baccarat_state_${APP_VERSION}`;
+const STORAGE_KEY = "baccarat_main_only_v3";
 
 function newState(){
   return {
@@ -117,6 +130,35 @@ function settlePendingPick(win){
   }
 }
 
+function excelNextPick(pRanks, bRanks){
+  const pTotal = handTotal(pRanks);
+  const bTotal = handTotal(bRanks);
+
+  const pMax = max1to9(pRanks);
+  const bMax = max1to9(bRanks);
+
+  const pHv = (pMax==null)? null : (HV_MAP[pMax] ?? null);
+  const bHv = (bMax==null)? null : (HV_MAP[bMax] ?? null);
+
+  const pAg = (state.prevP==null)? null : (AG_MAP[Math.abs(pTotal - state.prevP)] ?? null);
+  const bAg = (state.prevB==null)? null : (AG_MAP[Math.abs(bTotal - state.prevB)] ?? null);
+
+  const tpP = (pHv==null || pAg==null || pAg===0)? null : (pHv / pAg);
+  const tpB = (bHv==null || bAg==null || bAg===0)? null : (bHv / bAg);
+
+  let pick = null;
+  if (tpP!=null && tpB!=null){
+    if (tpP > tpB) pick = "莊家";
+    else if (tpB > tpP) pick = "閒家";
+    else pick = "看一局";
+  }
+
+  state.prevP = pTotal;
+  state.prevB = bTotal;
+
+  return {pTotal, bTotal, tpP, tpB, nextPick: pick};
+}
+
 function fmt(x){
   if (x==null) return "（無）";
   const n = Number(x);
@@ -169,24 +211,12 @@ function cmdRedo(){
 }
 function cmdReset(){
   state = newState();
-  // UX: after submit, jump to KPI and refocus input
-  const kpiCard = document.getElementById("kpiCard");
-  if (kpiCard) kpiCard.scrollIntoView({behavior:"smooth", block:"start"});
-  const input = document.getElementById("handInput");
-  if (input) input.focus();
-
   saveState();
   render();
   return {ok:true, msg:"已重置（新靴/新一輪）"};
 }
 function cmdClearLog(){
   state.log = [];
-  // UX: after submit, jump to KPI and refocus input
-  const kpiCard = document.getElementById("kpiCard");
-  if (kpiCard) kpiCard.scrollIntoView({behavior:"smooth", block:"start"});
-  const input = document.getElementById("handInput");
-  if (input) input.focus();
-
   saveState();
   render();
   return {ok:true, msg:"已清除紀錄（log）"};
@@ -216,8 +246,8 @@ function submit(line){
   const {p,b} = parsed;
 
   // 本局結果
-  const pTotal = Engine.handTotal(p);
-  const bTotal = Engine.handTotal(b);
+  const pTotal = handTotal(p);
+  const bTotal = handTotal(b);
   const win = winnerLabel(pTotal, bTotal);
 
   // 結算上一局建議（對照本局）
@@ -227,7 +257,7 @@ function submit(line){
   applyHandResult(win);
 
   // 產生下局建議
-  const res = Engine.excelNextPick(p,b);
+  const res = excelNextPick(p,b);
   state.pendingPick = res.nextPick;
 
   addLogLine({
@@ -252,12 +282,6 @@ else if (win === "閒家") winEl.classList.add("win-player");
 else if (win === "和") winEl.classList.add("win-tie");
   setText("nextPick", res.nextPick ?? "（前兩手不足）");
   setText("lastOut", win);
-
-  // UX: after submit, jump to KPI and refocus input
-  const kpiCard = document.getElementById("kpiCard");
-  if (kpiCard) kpiCard.scrollIntoView({behavior:"smooth", block:"start"});
-  const input = document.getElementById("handInput");
-  if (input) input.focus();
 
   saveState();
   render();
@@ -290,20 +314,18 @@ else if (pick === "看一局") nextPickEl.classList.add("pick-skip");    setText
     for (const row of state.log){
       const div = document.createElement("div");
       div.className = "line";      div.innerHTML = `
-        <details class="logItem">
-          <summary class="mono">
-            <b>第${row.n}局</b>
-            <span class="pill">本局勝利：${row.win}</span>
-            <span class="pill">上局建議：${markPick(row.prevPick)} ${row.prevPick}</span>
-            <span class="pill">結果：${row.prevPickResult}</span>
-            <span class="pill">下局：${markPick(row.nextPick)} ${row.nextPick}</span>
-          </summary>
-          <div class="mono muted" style="margin-top:6px;">
-            輸入：${escapeHtml(row.input)}<br/>
-            點數：閒=${row.pTotal} 莊=${row.bTotal}<br/>
-            TP：閒=${row.tpP==null?"（無）":escapeHtml(fmt(row.tpP))} ｜ 莊=${row.tpB==null?"（無）":escapeHtml(fmt(row.tpB))}
-          </div>
-        </details>
+        <div class="mono">
+          <b>第${row.n}局</b>
+          <span class="pill">本局勝利：${row.win}</span>
+          <span class="pill">上局建議：${markPick(row.prevPick)} ${row.prevPick}</span>
+          <span class="pill">結果：${row.prevPickResult}</span>
+          <span class="pill">下局：${markPick(row.nextPick)} ${row.nextPick}</span>
+        </div>
+        <div class="mono muted" style="margin-top:6px;">
+          輸入：${escapeHtml(row.input)}<br/>
+          點數：閒=${row.pTotal} 莊=${row.bTotal}<br/>
+          TP：閒=${row.tpP==null?"（無）":escapeHtml(fmt(row.tpP))} ｜ 莊=${row.tpB==null?"（無）":escapeHtml(fmt(row.tpB))}
+        </div>
       `;
       logEl.appendChild(div);
     }
@@ -398,12 +420,6 @@ function keypadSubmit(){
   const line = `${state.keypad.p.join(".")} ${state.keypad.b.join(".")}`;
   submit(line);
   keypadClearBoth();
-  // UX: after submit, jump to KPI and refocus input
-  const kpiCard = document.getElementById("kpiCard");
-  if (kpiCard) kpiCard.scrollIntoView({behavior:"smooth", block:"start"});
-  const input = document.getElementById("handInput");
-  if (input) input.focus();
-
   saveState();
   render();
 }
@@ -491,15 +507,3 @@ document.getElementById("submitKeypadBtn").addEventListener("click", ()=>{
 
 // 初次載入
 render();
-
-// ---- help modal ----
-(function(){
-  const btn = document.getElementById("helpBtn");
-  const modal = document.getElementById("helpModal");
-  const close = document.getElementById("helpClose");
-  if (!btn || !modal || !close) return;
-  const hide = ()=> modal.classList.add("hidden");
-  btn.addEventListener("click", ()=> modal.classList.remove("hidden"));
-  close.addEventListener("click", hide);
-  modal.addEventListener("click", (e)=>{ if (e.target===modal) hide(); });
-})();
