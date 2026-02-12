@@ -264,7 +264,12 @@ function submit(line){
     ts: Date.now()
   });
 
-  setText("thisWin", win);
+  const winEl = document.getElementById("thisWin");
+winEl.textContent = win;
+winEl.classList.remove("win-banker","win-player","win-tie");
+if (win === "莊家") winEl.classList.add("win-banker");
+else if (win === "閒家") winEl.classList.add("win-player");
+else if (win === "和") winEl.classList.add("win-tie");
   setText("nextPick", res.nextPick ?? "（前兩手不足）");
   setText("lastOut", win);
 
@@ -286,7 +291,13 @@ function render(){
     setText("lastOut", "—");
   }else{
     setText("thisWin", state.log[0].win);
-    setText("nextPick", state.log[0].nextPick);
+    const nextPickEl = document.getElementById("nextPick");
+const pick = state.log[0].nextPick;
+nextPickEl.textContent = pick;
+nextPickEl.classList.remove("pick-banker","pick-player","pick-skip");
+if (pick === "莊家") nextPickEl.classList.add("pick-banker");
+else if (pick === "閒家") nextPickEl.classList.add("pick-player");
+else if (pick === "看一局") nextPickEl.classList.add("pick-skip");
     applyThemeByPick(state.log[0].nextPick);
     setText("lastOut", state.log[0].win);
   }
