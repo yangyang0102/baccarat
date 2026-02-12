@@ -37,7 +37,9 @@
     .bad{border-color:#6b2f2f}
     .muted{color:#bdbdbd}
     a{color:#9ad1ff}
-  </style>
+  
+.kpi .wide{grid-column: span 2;}
+</style>
 </head>
 <body>
 <header>
@@ -88,9 +90,27 @@
 
   <div class="card">
     <div class="kpi">
-      
-        
+      <div class="box wide">
+        <div class="label">下局建議下注</div>
+        <div class="value mono" id="nextPick">—</div>
       </div>
+      <div class="box wide">
+        <div class="label">本局勝利</div>
+        <div class="value mono" id="thisWin">—</div>
+      </div>
+      <div class="box">
+        <div class="label">目前第幾局</div>
+        <div class="value" id="handNo">0</div>
+      </div>
+      <div class="box">
+        <div class="label">結果統計（莊 / 閒 / 和）</div>
+        <div class="value" id="wlt">0 / 0 / 0</div>
+      </div>
+      <div class="box">
+        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）</div>
+        <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
+      </div>
+</div>
 </div>
       </div>
     </div>
