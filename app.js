@@ -335,16 +335,16 @@ function renderKeypad(){
   const pad = document.getElementById("cardPad");
   if (pad && !pad.dataset.ready){
     const labels = [
-      {v:1, t:"A(1)"},{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},
+      {v:1, t:"1(A)"},{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},
       {v:6,t:"6"},{v:7,t:"7"},{v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},
-      {v:11,t:"J(11)"},{v:12,t:"Q(12)"},{v:13,t:"K(13)"}
+      {v:11,t:"11(J)"},{v:12,t:"12(Q)"},{v:13,t:"13(K)"}
     ];
     for (const it of labels){
       const btn = document.createElement("button");
       btn.textContent = it.t;
       btn.addEventListener("click", ()=>{
-        if (state.keypad.side === "P") state.keypad.p.push(it.v);
-        else state.keypad.b.push(it.v);
+        if (state.keypad.side === "P") if(state.keypad.p.length<3){state.keypad.p.push(it.v);}else{alert('閒家最多只能輸入三張');}
+        else if(state.keypad.b.length<3){state.keypad.b.push(it.v);}else{alert('莊家最多只能輸入三張');}
         saveState();
         renderKeypad();
       });
@@ -404,7 +404,7 @@ document.getElementById("resetBtn").addEventListener("click", ()=>{
   const r = cmdReset(); setText("lastOut", r.msg);
 });
 document.getElementById("clearBtn").addEventListener("click", ()=>{
-  if (!confirm("確定要清除紀錄嗎？（只清 log，不影響局數/統計）")) return;
+  if (!confirm("確定要清除紀錄嗎？（只清除最下方紀錄，不影響局數/統計）")) return;
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
