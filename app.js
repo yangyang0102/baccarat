@@ -128,6 +128,7 @@ function settlePendingPick(win){
     st.pickLosses += 1;
     return {evaluated: pick, result: "輸"};
   }
+  updateKeyBadges();
 }
 
 function excelNextPick(pRanks, bRanks){
@@ -367,14 +368,18 @@ function renderKeypad(){
   if (sideP && sideB){
     if (state.keypad.side === "P"){
       sideP.classList.add("primary");
-      sideP.textContent = "正在輸入：閒";
+      const pHint = document.getElementById("pHint");
+      if (pHint) pHint.textContent = "正在輸入"; else sideP.textContent = "正在輸入：閒";
       sideB.classList.remove("primary");
-      sideB.textContent = "切換到：莊";
+      const bHint = document.getElementById("bHint");
+      if (bHint) bHint.textContent = "點我切換"; else sideB.textContent = "切換到：莊";
     }else{
       sideB.classList.add("primary");
-      sideB.textContent = "正在輸入：莊";
+      const bHint = document.getElementById("bHint");
+      if (bHint) bHint.textContent = "正在輸入"; else sideB.textContent = "正在輸入：莊";
       sideP.classList.remove("primary");
-      sideP.textContent = "切換到：閒";
+      const pHint = document.getElementById("pHint");
+      if (pHint) pHint.textContent = "點我切換"; else sideP.textContent = "切換到：閒";
     }
   }
 
@@ -387,6 +392,8 @@ function renderKeypad(){
     ];
     for (const it of labels){
       const btn = document.createElement("button");
+      btn.className = "key";
+      btn.type = "button";
       btn.textContent = it.t;
       btn.addEventListener("click", ()=>{
         if (state.keypad.side === "P") if(state.keypad.p.length<3){state.keypad.p.push(it.v);}else{alert('閒家最多只能輸入三張');}
@@ -396,7 +403,45 @@ function renderKeypad(){
       });
       pad.appendChild(btn);
     }
-    pad.dataset.ready = "1";
+    pad.dataset
+function updateKeyBadges(){
+  const pad = document.getElementById("cardPad");
+  if (!pad) return;
+  const btns = pad.querySelectorAll("button.key");
+  const p = state.keypad.p || [];
+  const b = state.keypad.b || [];
+  const pThird = p.length >= 3 ? p[2] : null;
+  const bThird = b.length >= 3 ? b[2] : null;
+
+  // count occurrences (helps if same rank repeats; we show x2 badge)
+  const countMap = new Map();
+  for (const v of [...p, ...b]) countMap.set(v, (countMap.get(v)||0)+1);
+
+  for (const btn of btns){
+    const v = Number(btn.dataset.v || "");
+    btn.classList.remove("pickedP","pickedB","pickedSup");
+    const wrap = btn.querySelector(".badgeWrap");
+    if (wrap) wrap.innerHTML = "";
+
+    const badges = [];
+    if (p.includes(v)) { btn.classList.add("pickedP"); badges.push({t:"閒", cls:"badgeP"}); }
+    if (b.includes(v)) { btn.classList.add("pickedB"); badges.push({t:"莊", cls:"badgeB"}); }
+    if (v === pThird || v === bThird) { btn.classList.add("pickedSup"); badges.push({t:"補", cls:"badgeS"}); }
+
+    const c = countMap.get(v);
+    if (c && c > 1) badges.push({t:`x${c}`, cls:"badgeN"});
+
+    if (wrap && badges.length){
+      for (const bd of badges){
+        const s = document.createElement("span");
+        s.className = "badge " + bd.cls;
+        s.textContent = bd.t;
+        wrap.appendChild(s);
+      }
+    }
+  }
+}
+.ready = "1";
   }
 }
 
