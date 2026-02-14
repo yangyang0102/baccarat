@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.32";
+const BUILD_VERSION = "v1.33";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -274,6 +274,39 @@ function setText(id, text){
   if (el) el.textContent = text;
 }
 
+
+function toFaceLabel(v){
+  const s = String(v);
+  if (s === "1") return "A";
+  if (s === "11") return "J";
+  if (s === "12") return "Q";
+  if (s === "13") return "K";
+  return s;
+}
+
+function setHandChips(id, cards, side){
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const list = Array.isArray(cards) ? cards : [];
+  if (!list.length){
+    el.innerHTML = '<div class="hand-wrap '+(side==="P"?'hand-p':'hand-b')+'"><div class="hand-chips"><span class="card-chip">（空）</span></div></div>';
+    return;
+  }
+
+  const chips = list.map((c, idx)=>{
+    const isLast = idx === list.length - 1;
+    const label = escapeHtml(toFaceLabel(c));
+    return '<span class="card-chip'+(isLast?' is-last':'')+'">'+label+'</span>';
+  }).join("");
+
+  // simple meta: show count (keeps it minimal)
+  const meta = '<div class="hand-meta">張數：'+list.length+'</div>';
+
+  el.innerHTML = '<div class="hand-wrap '+(side==="P"?'hand-p':'hand-b')+'"><div class="hand-chips">'+chips+'</div>'+meta+'</div>';
+}
+
+
 // ---- commands ----
 function cmdUndo(){
   if (!state.undo.length) return {ok:false, msg:"沒有可撤銷的紀錄"};
@@ -421,9 +454,8 @@ function renderKeypad(){
   const nextSide = expectedSide();
   state.keypad.side = nextSide || "P";
 
-  setText("pCardsDisp", state.keypad.p.length ? state.keypad.p.join(".") : "（空）");
-  setText("bCardsDisp", state.keypad.b.length ? state.keypad.b.join(".") : "（空）");
-
+  setHandChips("pCardsDisp", state.keypad.p, "P");
+  setHandChips("bCardsDisp", state.keypad.b, "B");
   const sideP = document.getElementById("sidePlayer");
   const sideB = document.getElementById("sideBanker");
   if (sideP && sideB){
