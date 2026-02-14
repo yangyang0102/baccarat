@@ -127,11 +127,14 @@ function newState(){
     undo: [],
     redo: [],
 
-    keypad: { side: "P", p: [], b: [] } // side: "P" or "B"
+    keypad: { side: "P", p: [], b: [], seq: [] } // side: "P" or "B" (auto v17)
   };
 }
 
 let state = loadState() ?? newState();
+// v17: ensure keypad seq exists
+state.keypad = state.keypad || {side:"P",p:[],b:[],seq:[]};
+state.keypad.seq = state.keypad.seq || [];
 
 function saveState(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -510,28 +513,63 @@ function updateKeyBadges(){
 
 
 function keypadBackspace(){
-  const arr = (state.keypad.side === "P") ? state.keypad.p : state.keypad.b;
-  if (arr.length) arr.pop();
+  state.keypad.seq = state.keypad.seq || [];
+  const last = state.keypad.seq.pop();
+  if (last === "P"){
+    state.keypad.p.pop();
+  }else if (last === "B"){
+    state.keypad.b.pop();
+  }else{
+    // fallback
+    if ((state.keypad.b||[]).length > (state.keypad.p||[]).length) state.keypad.b.pop();
+    else state.keypad.p.pop();
+  }
 }
+
 function keypadClearSide(){
-  if (state.keypad.side === "P") state.keypad.p = [];
-  else state.keypad.b = [];
+  // auto mode: clear the side that is currently expected
+  const side = expectedSide() || "P";
+  if (side === "P"){
+    // remove any player cards and rebuild seq
+    state.keypad.p = [];
+  }else{
+    state.keypad.b = [];
+  }
+  // rebuild seq based on counts: P P B B [P] [B]
+  state.keypad.seq = [];
+  for (let i=0;i<state.keypad.p.length;i++) state.keypad.seq.push("P");
+  for (let i=0;i<state.keypad.b.length;i++) state.keypad.seq.push("B");
 }
+
 function keypadClearBoth(){
   state.keypad.p = [];
   state.keypad.b = [];
+  state.keypad.seq = [];
 }
+
 function keypadSubmit(){
-  if (!state.keypad.p.length || !state.keypad.b.length){
-    alert("請先用按鈕輸入閒牌與莊牌（兩邊都要有）");
+  const p = state.keypad.p || [];
+  const b = state.keypad.b || [];
+  if (p.length < 2 || b.length < 2){
+    alert("請先輸入閒家兩張、莊家兩張");
     return;
   }
-  const line = `${state.keypad.p.join(".")} ${state.keypad.b.join(".")}`;
+  const next = expectedSide();
+  if (next === "P"){
+    alert("依補牌規則，閒家需要補一張");
+    return;
+  }
+  if (next === "B"){
+    alert("依補牌規則，莊家需要補一張");
+    return;
+  }
+  const line = `${p.join(".")} ${b.join(".")}`;
   submit(line);
   keypadClearBoth();
   saveState();
   render();
 }
+
 
 // ---- bind DOM ----
 document.getElementById("submitBtn").addEventListener("click", ()=>{
@@ -563,14 +601,8 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
-document.getElementById("sidePlayer").addEventListener("click", ()=>{
-  state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
-  saveState(); renderKeypad();
-});
-document.getElementById("sideBanker").addEventListener("click", ()=>{
-  state.keypad.side = (state.keypad.side === "P") ? "B" : "P";
-  saveState(); renderKeypad();
-});
+document.getElementById("sidePlayer").addEventListener("click", ()=>{ /* auto mode */ });
+document.getElementById("sideBanker").addEventListener("click", ()=>{ /* auto mode */ });
 document.getElementById("bkspBtn").addEventListener("click", ()=>{
   keypadBackspace(); saveState(); renderKeypad();
 });
