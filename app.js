@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v30";
+const BUILD_VERSION = "v31";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
