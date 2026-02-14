@@ -1,4 +1,4 @@
-const CACHE_NAME = "baccarat-main-only-v13";
+const CACHE_NAME = "baccarat-main-only-v9-deskfix";
 const ASSETS = [
   "./",
   "./index.html",

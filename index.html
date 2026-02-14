@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>豪樂百家輔助系統</title>
+  <title>百家主注助手（離線）</title>
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#111111" />
@@ -40,253 +40,24 @@
   
 .kpi .wide{grid-column: span 2;}
 
-/* --- 主色主題（莊=紅、閒=藍、看一局=中性灰；金色點綴） --- */
-:root{
-  --accent:#3a3a3a;         /* 中性 */
-  --gold:#ffdd55;           /* 亮金 */
-  --accentBg:rgba(255,255,255,.04);
-  --accentBorder:rgba(255,255,255,.10);
-}
-body.theme-banker{
-  --accent:#d32f2f;         /* 莊=紅 */
-  --gold:#ffdd55;
-  --accentBg:rgba(211,47,47,.12);
-  --accentBorder:rgba(211,47,47,.32);
-}
-body.theme-player{
-  --accent:#1e88e5;         /* 閒=藍 */
-  --gold:#ffdd55;
-  --accentBg:rgba(30,136,229,.12);
-  --accentBorder:rgba(30,136,229,.32);
-}
-body.theme-neutral{
-  --accent:#3a3a3a;
-  --gold:#ffdd55;
-  --accentBg:rgba(255,255,255,.04);
-  --accentBorder:rgba(255,255,255,.10);
-}
 
-/* 套用到既有 UI：克制、工具感 */
-header{ border-bottom-color: var(--accentBorder); }
-.card{ border-color: var(--accentBorder); }
-.kpi .box{ border-color: var(--accentBorder); }
-.pill{ border-color: var(--accentBorder); }
-
-/* 讓「送出」更跟主色走（不閃、不花） */
-button.primary{
-  border-color: var(--accentBorder);
-  background: linear-gradient(180deg, var(--accentBg), rgba(0,0,0,.22));
+/* 桌機也維持手機版寬度，避免撐開跑版 */
+main{
+  max-width: 520px;
+  margin: 0 auto;
+  width: 100%;
 }
-
-/* 下局建議：金色點綴 */
-#nextPick{ color: var(--gold); }
-
-
-/* 下局建議文字顏色 */
-.pick-banker { color: #e53935; }
-.pick-player { color: #1e88e5; }
-.pick-skip   { color: #43a047; }
-
-/* 本局勝利顏色 */
-.win-banker { color: #e53935; }
-.win-player { color: #1e88e5; }
-.win-tie    { color: #ffd54f; }
-
-
-/* === UI polish v12 === */
-
-/* KPI 區塊排版優化（手機更整齊） */
-.kpi{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap:12px;
+header{
+  max-width: 520px;
+  margin: 0 auto;
 }
-.kpi .box{
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  min-height:92px;
-}
-.kpi .label{
-  font-size:12px;
-  letter-spacing:.2px;
-}
-.kpi .value{
-  margin-top:10px;
-  font-size:20px;
-  line-height:1.1;
-}
-.kpi .wide{ grid-column: 1 / -1; }
-
-#pickStats, #wlt{
-  font-variant-numeric: tabular-nums;
-}
-
-/* 小螢幕改單欄，避免擠在一起 */
-@media (max-width: 420px){
-  .kpi{ grid-template-columns: 1fr; }
-  .kpi .box{ min-height:84px; }
-}
-
-button:disabled{
-  opacity:.45;
-  filter:saturate(.6);
-}
-
-/* 畫面內訊息（取代 alert） */
-.msg{
-  margin-top:10px;
-  font-size:13px;
-  line-height:1.35;
-  color:#ffb4b4;
-  display:none;
-}
-.msg.show{ display:block; }
-.msg.ok{ color:#b7ffbf; }
-
-
-.ver{
-  font-size:12px;
-  opacity:.65;
-  margin-left:6px;
-  font-weight:500;
-}
-.subnote{
-  margin-left:6px;
-  font-size:12px;
-  opacity:.7;
-  white-space:nowrap;
-}
-.danger-row{
-  margin-top:12px;
-  padding-top:12px;
-  border-top:1px solid rgba(255,255,255,.08);
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.danger-row button{
-  opacity:.85;
-}
-/* ===== UI polish: only 閒/莊 big tiles + keypad ===== */
-.bigChoiceWrap{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:12px;
-}
-.bigChoice{
-  min-height:110px;
-  border-radius:22px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  padding:18px 16px;
-  cursor:pointer;
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  text-align:left;
-}
-.bigLabel{
-  font-size:44px;
-  font-weight:900;
-  letter-spacing:6px;
-  line-height:1;
-}
-.bigMeta{
-  font-size:12px;
-  color:#bdbdbd;
-}
-.bigChoice.player .bigLabel{ color:#1e88e5; }
-.bigChoice.banker .bigLabel{ color:#e53935; }
-
-.keypad{
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:10px;
-}
-.key{
-  border-radius:16px;
-  padding:16px 0;
-  text-align:center;
-  font-weight:900;
-  font-size:18px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color:#e8ecff;
-}
-.key:active{ transform: scale(.985); }
-
-.chips{ display:flex; gap:8px; flex-wrap:wrap; }
-.chip{
-  padding:8px 10px;
-  border-radius:999px;
-  font-size:12px;
-  font-weight:900;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
-}
-.chip.p{ color: rgba(58,160,255,.95); background: rgba(58,160,255,.12); }
-.chip.b{ color: rgba(255,75,92,.95); background: rgba(255,75,92,.12); }
-
-.btn{
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
-  color:#e8ecff;
-  border-radius: 16px;
-  padding:12px 14px;
-  font-weight:800;
-  cursor:pointer;
-}
-.btn.primary{
-  background: linear-gradient(135deg, rgba(58,160,255,.75), rgba(58,160,255,.25));
-  border-color: rgba(58,160,255,.35);
-}
-
-@media (max-width:420px){
-  .keypad{ grid-template-columns: repeat(4, 1fr); }
-}
-
-  
-/* ===== key badges (v2) ===== */
-.key{ position: relative; overflow: hidden; }
-.keyText{ display:block; }
-.badgeWrap{
-  position:absolute;
-  left:10px;
-  bottom:10px;
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-  pointer-events:none;
-}
-.badge{
-  font-size:12px;
-  line-height:1;
-  padding:6px 10px;
-  border-radius:999px;
-  font-weight:900;
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.35);
-  box-shadow: 0 10px 24px rgba(0,0,0,.35);
-}
-.badgeP{ background: rgba(30,136,229,.35); }
-.badgeB{ background: rgba(229,57,53,.35); }
-.badgeS{ background: rgba(120,255,214,.18); }
-.badgeN{ background: rgba(255,255,255,.12); }
-
-.key.pickedP{ border-color: rgba(30,136,229,.55); box-shadow: 0 0 0 1px rgba(30,136,229,.20) inset; }
-.key.pickedB{ border-color: rgba(229,57,53,.55); box-shadow: 0 0 0 1px rgba(229,57,53,.18) inset; }
-.key.pickedSup{ }
-
 </style>
 </head>
 <body>
 <header>
   <h1>百家輔助系統</h1>
-  <div class="sub">僅供輔助參考，切勿沉迷。</div>
-</header>
-
-<main>
+  <div class="sub">
+    僅供輔助參考，切勿沉迷。
 <div class="card">
     <div class="row">
       <input id="handInput" type="text" placeholder="例：12.12.6 10.12.9" autocomplete="off" autocapitalize="off" spellcheck="false" />
@@ -296,44 +67,40 @@ button:disabled{
       <button id="resetBtn">重置牌靴🔄</button>
       <button id="clearBtn">清除紀錄</button>
     </div>
-    <div id="msg" class="msg" role="status" aria-live="polite"></div>
     <div class="hint">
+      你也可以在輸入框直接打：<span class="mono">撤回↪️</span>、<span class="mono">恢復↩️</span>、<span class="mono">重置牌靴🔄</span>、<span class="mono">clear</span>。
+    </div>
+  
+  <div class="card" id="keypadCard">
+    <div class="label" style="margin-bottom:8px;">按鈕輸入（可選用）</div>
+    <div class="row" style="margin-bottom:10px;">
+      <button id="sidePlayer" class="primary">正在輸入：閒</button>
+      <button id="sideBanker">切換到：莊</button>
+      <button id="bkspBtn">退一張</button>
+      <button id="clearSideBtn">清空此方</button>
+    </div>
+    <div class="row" style="gap:8px;">
+      <div class="box" style="flex:1;min-width:240px;">
+        <div class="label">閒牌</div>
+        <div class="value mono" id="pCardsDisp">（空）</div>
+      </div>
+      <div class="box" style="flex:1;min-width:240px;">
+        <div class="label">莊牌</div>
+        <div class="value mono" id="bCardsDisp">（空）</div>
+      </div>
     </div>
 
-<div class="card" id="keypadCard">
-    <div class="label" style="margin-bottom:8px;">按鈕輸入（可選用）</div>
-    <div class="bigChoiceWrap" style="margin-bottom:10px;">
-  <button id="sidePlayer" class="bigChoice player primary" type="button">
-    <div class="bigLabel">閒</div>
-    <div class="bigMeta" id="pHint">正在輸入</div>
-  </button>
-  <button id="sideBanker" class="bigChoice banker" type="button">
-    <div class="bigLabel">莊</div>
-    <div class="bigMeta" id="bHint">點我切換</div>
-  </button>
-</div>
+    <div class="hint" style="margin-top:10px;">點牌面加入（1=A、11=J、12=Q、13=K、10=10）。每局輸入完按「送出」。</div>
+    <div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
 
-<div class="row" style="margin-bottom:10px;">
-  <button id="bkspBtn" class="btn" type="button">退一張</button>
-  <button id="clearSideBtn" class="btn" type="button">清空此方</button>
-</div>
-
-<div class="chips" style="margin-top:6px;">
-  <span class="chip p">閒：<span class="mono" id="pCardsDisp">（空）</span></span>
-  <span class="chip b">莊：<span class="mono" id="bCardsDisp">（空）</span></span>
-</div>
-
-<div class="hint" style="margin-top:10px;">點牌面加入（1=A、11=J、12=Q、13=K、10=10）。每局輸入完按「送出」。</div>
-<div id="cardPad" class="keypad" style="margin-top:10px;"></div>
-
-<div class="row" style="margin-top:10px;">
-  <button class="btn primary" id="submitKeypadBtn" type="button">送出</button>
-  <button class="btn" id="clearBothBtn" type="button">全部清空</button>
-</div>
+    <div class="row" style="margin-top:10px;">
+      <button class="primary" id="submitKeypadBtn">送出（用按鈕輸入）</button>
+      <button id="clearBothBtn">全部清空</button>
+    </div>
   </div>
 </div>
 
-<div class="card">
+  <div class="card">
     <div class="kpi">
       <div class="box wide">
         <div class="label">下局建議下注</div>
@@ -352,7 +119,7 @@ button:disabled{
         <div class="value" id="wlt">0 / 0 / 0</div>
       </div>
       <div class="box">
-        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）<span class="subnote">（以「上一局建議」結算）</span></div>
+        <div class="label">主注建議（照建議押）的成績（贏 / 輸 / 和 / 略過）</div>
         <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
       </div>
 </div>
@@ -361,10 +128,11 @@ button:disabled{
     </div>
   </div>
 
-<div class="card">
+  <div class="card">
     <div class="label muted" style="margin-bottom:8px;">紀錄（最新在上）</div>
     <div class="log" id="log"></div>
     <div class="hint">
+      離線安裝：Safari 開啟後 → 分享 →「加入主畫面」。首次需要有網路/HTTPS載入一次，之後可離線使用。
     </div>
   </div>
 </main>
