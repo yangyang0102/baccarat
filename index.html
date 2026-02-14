@@ -139,7 +139,7 @@ button.key .badgeWrap{
 </head>
 <body>
 <header>
-  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v28</span></h1>
+  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v29</span></h1>
   <div class="sub">
     僅供輔助參考，切勿沉迷。
 <div class="card">
@@ -155,14 +155,20 @@ button.key .badgeWrap{
 <div id="inputStatus" class="muted" style="margin-top:6px; font-size:13px;"></div>
 
     </div>
-
-    <div class="hint" style="margin-top:10px;">點牌面加入（1=A、11=J、12=Q、13=K、10=10）。每局輸入完按「送出」。</div>
-    <div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
+<div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
 
     <div class="row" style="margin-top:10px;">
       <button class="primary" id="submitKeypadBtn">送出（用按鈕輸入）</button>
       <button id="clearBothBtn">全部清空</button>
     </div>
+
+    <div class="card" id="fnPanel">
+      <div class="row">
+        <button id="resetShoeBtn" type="button">重置牌靴</button>
+        <button id="clearLogBtn" type="button">清除紀錄</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -202,10 +208,10 @@ button.key .badgeWrap{
     </div>
   </div>
 
-<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v28</div>
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v29</div>
 </main>
 
-<script src="app.js"></script>
+<script src="app.js?ver=v29"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));

@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v28";
+const BUILD_VERSION = "v29";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -468,6 +468,8 @@ function renderKeypad(){
         btn.classList.add("keyBack");
         btn.addEventListener("click", ()=>{
           keypadBackspace();
+          saveState();
+          renderKeypad();
         });
       }else{
         btn.addEventListener("click", ()=>{
@@ -660,4 +662,13 @@ render();
 document.addEventListener("DOMContentLoaded", ()=>{
   const vb = document.getElementById("verBadge");
   if (vb) vb.textContent = BUILD_VERSION;
+});
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  on("resetShoeBtn", ()=>{
+    cmdReset();
+  });
+  on("clearLogBtn", ()=>{
+    cmdClearLog();
+  });
 });
