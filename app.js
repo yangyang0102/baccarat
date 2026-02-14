@@ -572,12 +572,12 @@ function keypadSubmit(){
 
 
 // ---- bind DOM ----
-document.getElementById("submitBtn").addEventListener("click", ()=>{
+onEvent("submitBtn","click", ()=>{
   const v = document.getElementById("handInput").value;
   document.getElementById("handInput").value = "";
   try{ submit(v); }catch(e){ alert(e.message || String(e)); }
 });
-document.getElementById("handInput").addEventListener("keydown", (e)=>{
+onEvent("handInput","keydown", (e)=>{
   if (e.key === "Enter"){
     const v = document.getElementById("handInput").value;
     document.getElementById("handInput").value = "";
