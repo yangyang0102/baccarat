@@ -238,6 +238,8 @@ function setText(id, text){
   if (el) el.textContent = text;
 }
 
+function on(id, evt, fn){ const el = document.getElementById(id); if (el) el.addEventListener(evt, fn); }
+
 // ---- commands ----
 function cmdUndo(){
   if (!state.undo.length) return {ok:false, msg:"沒有可撤銷的紀錄"};
@@ -601,14 +603,10 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
-/* sidePlayer button removed (auto mode) */
-/* sideBanker button removed (auto mode) */
-/* bkspBtn removed (use ⌫ on keypad) */
-saveState(); renderKeypad();
-});
-/* clearSideBtn removed */
-saveState(); renderKeypad();
-});
+on("sidePlayer","click", ()=>{ /* auto mode */ });
+on("sideBanker","click", ()=>{ /* auto mode */ });
+on("bkspBtn","click", ()=>{ keypadBackspace(); saveState(); renderKeypad(); });
+on("clearSideBtn","click", ()=>{ keypadClearSide(); saveState(); renderKeypad(); });
 document.getElementById("clearBothBtn").addEventListener("click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
 });
