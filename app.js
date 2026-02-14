@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.36";
+const BUILD_VERSION = "v1.38";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -485,14 +485,12 @@ function render(){
       div.className = "line";
       const pillClass = row.win==="莊家" ? "good" : (row.win==="閒家" ? "bad" : "");
       div.innerHTML = `
-        <div class="mono">
-          <b>第${row.n}局</b>
-          ${i===0?'<button class="pill btn" data-action="undoHand">撤銷本局</button>':''}
+        <div class="log-head"><div class="mono log-left"><b>第${row.n}局</b>
           <span class="pill ${pillClass}">${row.win}</span>
           <span class="pill">上局建議：${row.prevPick}</span>
           <span class="pill">結果：${row.prevPickResult}</span>
           <span class="pill">下局：${row.nextPick}</span>
-        </div>
+        </div>${i===0?'<button class="pill btn undo-btn" data-action="undoHand">撤銷本局</button>':''}</div>
         <div class="mono muted" style="margin-top:6px;">
           輸入：${escapeHtml(row.input)}<br/>
           點數：閒=${row.pTotal} 莊=${row.bTotal}<br/>
