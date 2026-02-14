@@ -14,6 +14,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
+.subvalue{margin-top:6px;font-size:13px;opacity:.75}
+.pill.btn{cursor:pointer;border:none}
+.pill.btn:active{transform:translateY(1px)}
+
 
 /* Hand chips UI (A-style) */
 .hand-wrap{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
@@ -43,7 +47,7 @@
 .hand-meta{font-size:13px;opacity:.82;}
 
 
-/* UI polish v1.35 */
+/* UI polish v1.36 */
 .card{border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);} .result-big{font-size:64px;font-weight:800;} .glow-blue{color:#4da3ff;} .glow-red{color:#ff4d4d;} .glow-green{color:#38e27d;}
 
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;margin:0;background:#0b0b0b;color:#f1f1f1}
@@ -86,7 +90,7 @@ header{
   margin: 0 auto;
 }
 
-/* --- Keypad UI v1.35 (Baccarat style) --- */
+/* --- Keypad UI v1.36 (Baccarat style) --- */
 #cardPad{
   display:grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -164,14 +168,14 @@ button.key .badgeWrap{
 #keypadBackspaceBtn{ display:none !important; }
 
 
-/* Side indicators are auto-controlled in v1.35 */
+/* Side indicators are auto-controlled in v1.36 */
 #sidePlayer, #sideBanker{ pointer-events:none; }
 
 </style>
 </head>
 <body>
 <header>
-  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.35</span></h1>
+  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.36</span></h1>
   <div class="sub">
     僅供輔助參考，切勿沉迷。
 <div class="card">
@@ -227,6 +231,14 @@ button.key .badgeWrap{
         <div class="value" id="pickStats">0 / 0 / 0 / 0</div>
       </div>
 </div>
+
+      <div class="box">
+        <div class="label">近7局主注</div>
+        <div class="value" id="pick7">0 / 7 勝</div>
+        <div class="subvalue" id="pick7Prog">進度：0 / 7</div>
+      </div>
+
+</div>
 </div>
       </div>
     </div>
@@ -240,10 +252,10 @@ button.key .badgeWrap{
     </div>
   </div>
 
-<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.35</div>
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.36</div>
 </main>
 
-<script src="app.js?ver=v1.35"></script>
+<script src="app.js?ver=v1.36"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));

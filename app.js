@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.35";
+const BUILD_VERSION = "v1.36";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -353,6 +353,33 @@ function cmdClearLog(){
   return {ok:true, msg:"已清除紀錄（log）"};
 }
 
+
+function cmdUndoHand(){
+  if (!state.log.length) return {ok:false, msg:"沒有可撤銷的本局"};
+  const lastN = state.log[0].n;
+  if (!confirm(`確定撤銷第${lastN}局嗎?\n\n是 / 否`)) return {ok:false, msg:"已取消"};
+  const targetLen = state.log.length - 1;
+  if (!state.undo.length) return {ok:false, msg:"沒有可撤銷的紀錄"};
+  // 將目前狀態放入 redo（方便需要時回復）
+  state.redo.push(snapshot());
+  let safety = 500;
+  while (state.undo.length && safety--){
+    const snap = state.undo.pop();
+    restore(snap);
+    if (state.log.length === targetLen){
+      saveState();
+      render();
+      return {ok:true, msg:`已撤銷第${lastN}局`};
+    }
+  }
+  // 若找不到對應狀態，回復到原本狀態
+  const back = state.redo.pop();
+  if (back) restore(back);
+  saveState();
+  render();
+  return {ok:false, msg:"撤銷失敗（找不到上一局狀態）"};
+}
+
 // ---- submit ----
 function submit(line){
   const parsed = parseHand(line);
@@ -420,6 +447,26 @@ function render(){
   setText("wlt", `${st.bankerWins} / ${st.playerWins} / ${st.ties}`);
   setText("pickStats", `${st.pickWins} / ${st.pickLosses} / ${st.pickTies} / ${st.pickSkipped}`);
 
+  // 近7局主注（只計贏/輸；和/略過不計入進度）
+  const q = [];
+  for (const r of [...state.log].reverse()){
+    if (r.prevPickResult === "贏") q.push(1);
+    else if (r.prevPickResult === "輸") q.push(0);
+  }
+  let progress = 0, wins = 0;
+  if (q.length){
+    const mod = q.length % 7;
+    if (mod === 0){
+      progress = 7;
+      wins = q.slice(-7).reduce((a,b)=>a+b,0);
+    }else{
+      progress = mod;
+      wins = q.slice(-mod).reduce((a,b)=>a+b,0);
+    }
+  }
+  setText("pick7", `${wins} / 7 勝`);
+  setText("pick7Prog", `進度：${progress} / 7`);
+
   if (!state.log.length){
     setText("thisWin", "—");
     setText("nextPick", state.pendingPick ?? "—");
@@ -433,13 +480,14 @@ function render(){
   const logEl = document.getElementById("log");
   if (logEl){
     logEl.innerHTML = "";
-    for (const row of state.log){
+    for (let i=0;i<state.log.length;i++){ const row = state.log[i];
       const div = document.createElement("div");
       div.className = "line";
       const pillClass = row.win==="莊家" ? "good" : (row.win==="閒家" ? "bad" : "");
       div.innerHTML = `
         <div class="mono">
           <b>第${row.n}局</b>
+          ${i===0?'<button class="pill btn" data-action="undoHand">撤銷本局</button>':''}
           <span class="pill ${pillClass}">${row.win}</span>
           <span class="pill">上局建議：${row.prevPick}</span>
           <span class="pill">結果：${row.prevPickResult}</span>
@@ -722,3 +770,19 @@ document.addEventListener("DOMContentLoaded", ()=>{
     cmdClearLog();
   });
 });
+
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  const logEl = document.getElementById("log");
+  if (logEl){
+    logEl.addEventListener("click", (e)=>{
+      const t = e.target;
+      const btn = t && t.closest ? t.closest('[data-action="undoHand"]') : null;
+      if (btn){
+        e.preventDefault();
+        cmdUndoHand();
+      }
+    });
+  }
+});
+
