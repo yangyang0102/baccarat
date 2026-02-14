@@ -601,13 +601,11 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
-document.getElementById("sidePlayer").addEventListener("click", ()=>{ /* auto mode */ });
-document.getElementById("sideBanker").addEventListener("click", ()=>{ /* auto mode */ });
-document.getElementById("bkspBtn").addEventListener("click", ()=>{
-  keypadBackspace(); saveState(); renderKeypad();
+/* sidePlayer controls removed */
+/* sideBanker controls removed */
+/* bkspBtn removed (use keypad ⌫) */
 });
-document.getElementById("clearSideBtn").addEventListener("click", ()=>{
-  keypadClearSide(); saveState(); renderKeypad();
+/* clearSideBtn removed */
 });
 document.getElementById("clearBothBtn").addEventListener("click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
