@@ -32,6 +32,67 @@ function winnerLabel(pTotal, bTotal){
   if (bTotal > pTotal) return "莊家";
   return "和";
 }
+
+function baccaratPoint(v){
+  // v: 1-13 (A..K), baccarat point: A=1, 2-9=face, 10/J/Q/K=0
+  if (!v) return 0;
+  if (v >= 10) return 0;
+  return v;
+}
+function baccaratTotal(cards){
+  let s = 0;
+  for (const v of (cards||[])) s += baccaratPoint(v);
+  return s % 10;
+}
+function isNatural(p2, b2){
+  return p2 === 8 || p2 === 9 || b2 === 8 || b2 === 9;
+}
+function bankerShouldDraw(b2, p3Point){
+  // assumes player drew third card; use standard table
+  if (b2 <= 2) return true;
+  if (b2 === 3) return p3Point !== 8;
+  if (b2 === 4) return p3Point >= 2 && p3Point <= 7;
+  if (b2 === 5) return p3Point >= 4 && p3Point <= 7;
+  if (b2 === 6) return p3Point === 6 || p3Point === 7;
+  return false; // 7 stands
+}
+function expectedSide(){
+  // Auto dealing order with forced draw rules
+  const p = state.keypad.p || [];
+  const b = state.keypad.b || [];
+  const seq = state.keypad.seq || [];
+  const total = p.length + b.length;
+
+  if (total < 2) return "P";      // Player first two
+  if (total < 4) return "B";      // Banker next two
+
+  const p2 = baccaratTotal(p.slice(0,2));
+  const b2 = baccaratTotal(b.slice(0,2));
+
+  if (isNatural(p2,b2)) return null; // no draws
+
+  // Need to ensure we don't allow impossible states
+  if (p.length < 2 || b.length < 2) return null;
+
+  // Player draw decision
+  if (p.length === 2 && b.length === 2){
+    if (p2 <= 5) return "P"; // player draws third
+    // player stands, banker draws on 0-5
+    if (b2 <= 5) return "B";
+    return null;
+  }
+
+  // After player drew third
+  if (p.length === 3 && b.length === 2){
+    const p3 = baccaratPoint(p[2]);
+    if (bankerShouldDraw(b2, p3)) return "B";
+    return null;
+  }
+
+  // If banker already drew third, stop
+  return null;
+}
+
 function parseHand(line){
   const s = line.trim().toLowerCase();
   if (!s) return null;
@@ -313,46 +374,140 @@ function escapeHtml(s){
 
 // ---- keypad UI ----
 function renderKeypad(){
+  // Auto decide which side to input next
+  const nextSide = expectedSide();
+  state.keypad.side = nextSide || "P";
+
   setText("pCardsDisp", state.keypad.p.length ? state.keypad.p.join(".") : "（空）");
   setText("bCardsDisp", state.keypad.b.length ? state.keypad.b.join(".") : "（空）");
 
   const sideP = document.getElementById("sidePlayer");
   const sideB = document.getElementById("sideBanker");
   if (sideP && sideB){
-    if (state.keypad.side === "P"){
+    if (nextSide === "P"){
       sideP.classList.add("primary");
-      sideP.textContent = "正在輸入：閒";
       sideB.classList.remove("primary");
-      sideB.textContent = "切換到：莊";
-    }else{
+      const pHint = document.getElementById("pHint"); if (pHint) pHint.textContent = "正在輸入";
+      const bHint = document.getElementById("bHint"); if (bHint) bHint.textContent = "";
+    }else if (nextSide === "B"){
       sideB.classList.add("primary");
-      sideB.textContent = "正在輸入：莊";
       sideP.classList.remove("primary");
-      sideP.textContent = "切換到：閒";
+      const bHint = document.getElementById("bHint"); if (bHint) bHint.textContent = "正在輸入";
+      const pHint = document.getElementById("pHint"); if (pHint) pHint.textContent = "";
+    }else{
+      // no more cards
+      sideP.classList.remove("primary");
+      sideB.classList.remove("primary");
+      const pHint = document.getElementById("pHint"); if (pHint) pHint.textContent = "";
+      const bHint = document.getElementById("bHint"); if (bHint) bHint.textContent = "";
     }
   }
 
   const pad = document.getElementById("cardPad");
   if (pad && !pad.dataset.ready){
     const labels = [
-      {v:1, t:"1(A)"},{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},
-      {v:6,t:"6"},{v:7,t:"7"},{v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},
-      {v:11,t:"11(J)"},{v:12,t:"12(Q)"},{v:13,t:"13(K)"}
+      {v:1, t:"A"},{v:2,t:"2"},{v:3,t:"3"},{v:4,t:"4"},{v:5,t:"5"},{v:6,t:"6"},{v:7,t:"7"},
+      {v:8,t:"8"},{v:9,t:"9"},{v:10,t:"10"},{v:11,t:"J"},{v:12,t:"Q"},{v:13,t:"K"},
+      {v:"BACK", t:"⌫"}
     ];
     for (const it of labels){
       const btn = document.createElement("button");
-      btn.textContent = it.t;
-      btn.addEventListener("click", ()=>{
-        if (state.keypad.side === "P") if(state.keypad.p.length<3){state.keypad.p.push(it.v);}else{alert('閒家最多只能輸入三張');}
-        else if(state.keypad.b.length<3){state.keypad.b.push(it.v);}else{alert('莊家最多只能輸入三張');}
-        saveState();
-        renderKeypad();
-      });
+      btn.className = "key";
+      btn.type = "button";
+      btn.dataset.v = String(it.v);
+
+      const txt = document.createElement("span");
+      txt.className = "keyText";
+      txt.textContent = it.t;
+      btn.appendChild(txt);
+
+      const wrap = document.createElement("span");
+      wrap.className = "badgeWrap";
+      btn.appendChild(wrap);
+
+      if (it.v === "BACK"){
+        btn.classList.add("keyBack");
+        btn.addEventListener("click", ()=>{
+          keypadBackspace();
+        });
+      }else{
+        btn.addEventListener("click", ()=>{
+          const side = expectedSide();
+          if (!side){
+            alert("依百家樂補牌規則，本局不需要再補牌");
+            return;
+          }
+          if (side === "P"){
+            if (state.keypad.p.length < 3){
+              state.keypad.p.push(it.v);
+              state.keypad.seq.push("P");
+            }
+          }else{
+            if (state.keypad.b.length < 3){
+              state.keypad.b.push(it.v);
+              state.keypad.seq.push("B");
+            }
+          }
+          saveState();
+          renderKeypad();
+        });
+      }
+
       pad.appendChild(btn);
     }
     pad.dataset.ready = "1";
   }
+
+  updateKeyBadges();
 }
+
+function updateKeyBadges(){
+  const pad = document.getElementById("cardPad");
+  if (!pad) return;
+  const btns = pad.querySelectorAll("button.key");
+  const p = state.keypad.p || [];
+  const b = state.keypad.b || [];
+  const pThird = p.length >= 3 ? p[2] : null;
+  const bThird = b.length >= 3 ? b[2] : null;
+
+  const countMap = new Map();
+  for (const v of [...p, ...b]) countMap.set(v, (countMap.get(v)||0)+1);
+
+  for (const btn of btns){
+    const raw = btn.dataset.v || "";
+    if (raw === "BACK") continue;
+
+    const v = Number(raw);
+    btn.classList.remove("selected");
+    const wrap = btn.querySelector(".badgeWrap");
+    if (wrap) wrap.innerHTML = "";
+
+    const badges = [];
+
+    const inP = p.includes(v);
+    const inB = b.includes(v);
+
+    if (inP || inB) btn.classList.add("selected");
+
+    if (inP) badges.push({t:"閒", cls:"badgeP"});
+    if (inB) badges.push({t:"莊", cls:"badgeB"});
+
+    if (v === pThird || v === bThird) badges.push({t:"補", cls:"badgeS"});
+
+    const c = countMap.get(v);
+    if (c && c > 1) badges.push({t:`x${c}`, cls:"badgeN"});
+
+    if (wrap && badges.length){
+      for (const bd of badges){
+        const s = document.createElement("span");
+        s.className = "badge " + bd.cls;
+        s.textContent = bd.t;
+        wrap.appendChild(s);
+      }
+    }
+  }
+}
+
 
 function keypadBackspace(){
   const arr = (state.keypad.side === "P") ? state.keypad.p : state.keypad.b;
