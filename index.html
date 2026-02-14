@@ -14,6 +14,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
+/* UI polish v1.31 */
+.card{border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);} .result-big{font-size:64px;font-weight:800;} .glow-blue{color:#4da3ff;} .glow-red{color:#ff4d4d;} .glow-green{color:#38e27d;}
+
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;margin:0;background:#0b0b0b;color:#f1f1f1}
     header{padding:16px 16px 8px;border-bottom:1px solid #222;background:#0f0f0f;position:sticky;top:0}
     h1{font-size:18px;margin:0 0 6px}
@@ -54,7 +57,7 @@ header{
   margin: 0 auto;
 }
 
-/* --- Keypad UI v16 (Baccarat style) --- */
+/* --- Keypad UI v1.31 (Baccarat style) --- */
 #cardPad{
   display:grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -132,14 +135,14 @@ button.key .badgeWrap{
 #keypadBackspaceBtn{ display:none !important; }
 
 
-/* Side indicators are auto-controlled in v16 */
+/* Side indicators are auto-controlled in v1.31 */
 #sidePlayer, #sideBanker{ pointer-events:none; }
 
 </style>
 </head>
 <body>
 <header>
-  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v31</span></h1>
+  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.31</span></h1>
   <div class="sub">
     僅供輔助參考，切勿沉迷。
 <div class="card">
@@ -158,7 +161,7 @@ button.key .badgeWrap{
 <div id="cardPad" class="row" style="margin-top:10px;gap:8px;"></div>
 
     <div class="row" style="margin-top:10px;">
-      <button class="primary" id="submitKeypadBtn">送出</button>
+      <button class="primary" id="submitKeypadBtn">送出（用按鈕輸入）</button>
       <button id="clearBothBtn">全部清空</button>
     </div>
 
@@ -208,10 +211,10 @@ button.key .badgeWrap{
     </div>
   </div>
 
-<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v31</div>
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.31</div>
 </main>
 
-<script src="app.js?ver=v31"></script>
+<script src="app.js?ver=v1.31"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
