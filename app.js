@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v29";
+const BUILD_VERSION = "v30";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -290,12 +290,16 @@ function cmdRedo(){
   return {ok:true, msg:"已復原（redo）"};
 }
 function cmdReset(){
+  if (!confirm("確定重置此局牌靴嗎?\n\n是 / 否")) return;
+
   state = newState();
   saveState();
   render();
   return {ok:true, msg:"已重置（新靴/新一輪）"};
 }
 function cmdClearLog(){
+  if (!confirm("清除紀錄只清除下方紀錄欄\n\n是 / 否")) return;
+
   state.log = [];
   saveState();
   render();
