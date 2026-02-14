@@ -48,7 +48,7 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const STORAGE_KEY = "baccarat_main_only_v3";
+const STORAGE_KEY = "baccarat_main_only_v13";
 
 function newState(){
   return {
@@ -128,7 +128,6 @@ function settlePendingPick(win){
     st.pickLosses += 1;
     return {evaluated: pick, result: "輸"};
   }
-  updateKeyBadges();
 }
 
 function excelNextPick(pRanks, bRanks){
@@ -368,18 +367,14 @@ function renderKeypad(){
   if (sideP && sideB){
     if (state.keypad.side === "P"){
       sideP.classList.add("primary");
-      const pHint = document.getElementById("pHint");
-      if (pHint) pHint.textContent = "正在輸入"; else sideP.textContent = "正在輸入：閒";
       sideB.classList.remove("primary");
-      const bHint = document.getElementById("bHint");
-      if (bHint) bHint.textContent = "點我切換"; else sideB.textContent = "切換到：莊";
+      const pHint = document.getElementById("pHint"); if (pHint) pHint.textContent = "正在輸入";
+      const bHint = document.getElementById("bHint"); if (bHint) bHint.textContent = "點我切換";
     }else{
       sideB.classList.add("primary");
-      const bHint = document.getElementById("bHint");
-      if (bHint) bHint.textContent = "正在輸入"; else sideB.textContent = "正在輸入：莊";
       sideP.classList.remove("primary");
-      const pHint = document.getElementById("pHint");
-      if (pHint) pHint.textContent = "點我切換"; else sideP.textContent = "切換到：閒";
+      const bHint = document.getElementById("bHint"); if (bHint) bHint.textContent = "正在輸入";
+      const pHint = document.getElementById("pHint"); if (pHint) pHint.textContent = "點我切換";
     }
   }
 
@@ -394,16 +389,35 @@ function renderKeypad(){
       const btn = document.createElement("button");
       btn.className = "key";
       btn.type = "button";
-      btn.textContent = it.t;
+      btn.dataset.v = String(it.v);
+
+      const txt = document.createElement("span");
+      txt.className = "keyText";
+      txt.textContent = it.t;
+      btn.appendChild(txt);
+
+      const wrap = document.createElement("span");
+      wrap.className = "badgeWrap";
+      btn.appendChild(wrap);
+
       btn.addEventListener("click", ()=>{
-        if (state.keypad.side === "P") if(state.keypad.p.length<3){state.keypad.p.push(it.v);}else{alert('閒家最多只能輸入三張');}
-        else if(state.keypad.b.length<3){state.keypad.b.push(it.v);}else{alert('莊家最多只能輸入三張');}
+        if (state.keypad.side === "P"){
+          if (state.keypad.p.length < 3) state.keypad.p.push(it.v);
+          else alert("閒家最多只能輸入三張");
+        }else{
+          if (state.keypad.b.length < 3) state.keypad.b.push(it.v);
+          else alert("莊家最多只能輸入三張");
+        }
         saveState();
         renderKeypad();
       });
       pad.appendChild(btn);
     }
-    pad.dataset
+    pad.dataset.ready = "1";
+  }
+
+}
+
 function updateKeyBadges(){
   const pad = document.getElementById("cardPad");
   if (!pad) return;
@@ -413,7 +427,6 @@ function updateKeyBadges(){
   const pThird = p.length >= 3 ? p[2] : null;
   const bThird = b.length >= 3 ? b[2] : null;
 
-  // count occurrences (helps if same rank repeats; we show x2 badge)
   const countMap = new Map();
   for (const v of [...p, ...b]) countMap.set(v, (countMap.get(v)||0)+1);
 
@@ -441,9 +454,7 @@ function updateKeyBadges(){
     }
   }
 }
-.ready = "1";
-  }
-}
+
 
 function keypadBackspace(){
   const arr = (state.keypad.side === "P") ? state.keypad.p : state.keypad.b;
