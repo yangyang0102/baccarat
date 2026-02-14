@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.34";
+const BUILD_VERSION = "v1.35";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -284,6 +284,20 @@ function toFaceLabel(v){
   return s;
 }
 
+
+function baccaratPoints(cards){
+  const list = Array.isArray(cards) ? cards : [];
+  let sum = 0;
+  for (const c of list){
+    const n = Number(c);
+    if (!Number.isFinite(n)) continue;
+    if (n === 1) sum += 1;
+    else if (n >= 2 && n <= 9) sum += n;
+    else sum += 0; // 10/J/Q/K
+  }
+  return sum % 10;
+}
+
 function setHandChips(id, cards, side){
   const el = document.getElementById(id);
   if (!el) return;
@@ -301,7 +315,7 @@ function setHandChips(id, cards, side){
   }).join("");
 
   // simple meta: show count (keeps it minimal)
-  const meta = '<div class="hand-meta">張數：'+list.length+'</div>';
+  const meta = '<div class="hand-meta">總點數：'+baccaratPoints(list)+'</div>';
 
   el.innerHTML = '<div class="hand-wrap '+(side==="P"?'hand-p':'hand-b')+'"><div class="hand-chips">'+chips+'</div>'+meta+'</div>';
 }
