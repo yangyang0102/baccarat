@@ -601,10 +601,14 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
-/* sidePlayer controls removed */
-/* sideBanker controls removed */
-/* bkspBtn removed (use keypad ⌫) */
-/* clearSideBtn removed */
+document.getElementById("sidePlayer").addEventListener("click", ()=>{ /* auto mode */ });
+document.getElementById("sideBanker").addEventListener("click", ()=>{ /* auto mode */ });
+document.getElementById("bkspBtn").addEventListener("click", ()=>{
+  keypadBackspace(); saveState(); renderKeypad();
+});
+document.getElementById("clearSideBtn").addEventListener("click", ()=>{
+  keypadClearSide(); saveState(); renderKeypad();
+});
 document.getElementById("clearBothBtn").addEventListener("click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
 });
