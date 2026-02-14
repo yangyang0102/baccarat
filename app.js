@@ -604,9 +604,7 @@ document.getElementById("clearBtn").addEventListener("click", ()=>{
 /* sidePlayer controls removed */
 /* sideBanker controls removed */
 /* bkspBtn removed (use keypad ⌫) */
-});
 /* clearSideBtn removed */
-});
 document.getElementById("clearBothBtn").addEventListener("click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
 });
