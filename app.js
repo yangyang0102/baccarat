@@ -1,3 +1,13 @@
+// Build v28
+const BUILD_VERSION = "v28";
+
+function onEvent(id, event, handler){
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener(event, handler);
+}
+function on(id, handler){ onEvent(id, "click", handler); }
+
 // 豪樂百家輔助程式 v9
 // 只保留你 Excel 那套：HV/AG/TP -> 「下局」主注建議（莊/閒/看一局）
 // 修正：主注統計「贏/輸/和/略過」會用「上一局的建議」去對照「本局開牌結果」
@@ -92,6 +102,32 @@ function expectedSide(){
   // If banker already drew third, stop
   return null;
 }
+
+function updateInputStatus(){
+  const el = document.getElementById("inputStatus");
+  if (!el) return;
+
+  const p = state.keypad?.p || [];
+  const b = state.keypad?.b || [];
+  const total = p.length + b.length;
+
+  let msg = "";
+  if (total < 2) msg = "目前輸入：閒（第1張）";
+  else if (total < 4){
+    msg = total === 2 ? "目前輸入：莊（第1張）" : "目前輸入：莊（第2張）";
+  }else{
+    const nextSide = expectedSide();
+    if (!nextSide){
+      const p2 = baccaratTotal(p.slice(0,2));
+      const b2 = baccaratTotal(b.slice(0,2));
+      if (isNatural(p2,b2)) msg = "8/9 例牌：本局不補牌";
+      else msg = "本局輸入完成";
+    }else if (nextSide === "P") msg = "目前輸入：閒（補牌）";
+    else msg = "目前輸入：莊（補牌）";
+  }
+  el.textContent = msg;
+}
+
 
 function parseHand(line){
   const s = line.trim().toLowerCase();
@@ -462,6 +498,7 @@ function renderKeypad(){
   }
 
   updateKeyBadges();
+  updateInputStatus();
 }
 
 function updateKeyBadges(){
@@ -584,37 +621,43 @@ onEvent("handInput","keydown", (e)=>{
     try{ submit(v); }catch(err){ alert(err.message || String(err)); }
   }
 });
-document.getElementById("undoBtn").addEventListener("click", ()=>{
+onEvent("undoBtn","click", ()=>{
   const r = cmdUndo(); if (!r.ok) alert(r.msg); else setText("lastOut", r.msg);
   saveState(); render();
 });
-document.getElementById("redoBtn").addEventListener("click", ()=>{
+onEvent("redoBtn","click", ()=>{
   const r = cmdRedo(); if (!r.ok) alert(r.msg); else setText("lastOut", r.msg);
   saveState(); render();
 });
-document.getElementById("resetBtn").addEventListener("click", ()=>{
+onEvent("resetBtn","click", ()=>{
   if (!confirm("確定要重置嗎？（新靴/洗牌用）")) return;
   const r = cmdReset(); setText("lastOut", r.msg);
 });
-document.getElementById("clearBtn").addEventListener("click", ()=>{
+onEvent("clearBtn","click", ()=>{
   if (!confirm("確定要清除紀錄嗎？（只清除最下方紀錄，不影響局數/統計）")) return;
   const r = cmdClearLog(); setText("lastOut", r.msg);
 });
 
-document.getElementById("sidePlayer").addEventListener("click", ()=>{ /* auto mode */ });
-document.getElementById("sideBanker").addEventListener("click", ()=>{ /* auto mode */ });
-document.getElementById("bkspBtn").addEventListener("click", ()=>{
+onEvent("sidePlayer","click", ()=>{ /* auto mode */ });
+onEvent("sideBanker","click", ()=>{ /* auto mode */ });
+onEvent("bkspBtn","click", ()=>{
   keypadBackspace(); saveState(); renderKeypad();
 });
-document.getElementById("clearSideBtn").addEventListener("click", ()=>{
+onEvent("clearSideBtn","click", ()=>{
   keypadClearSide(); saveState(); renderKeypad();
 });
-document.getElementById("clearBothBtn").addEventListener("click", ()=>{
+onEvent("clearBothBtn","click", ()=>{
   keypadClearBoth(); saveState(); renderKeypad();
 });
-document.getElementById("submitKeypadBtn").addEventListener("click", ()=>{
+onEvent("submitKeypadBtn","click", ()=>{
   try{ keypadSubmit(); }catch(e){ alert(e.message || String(e)); }
 });
 
 // 初次載入
 render();
+
+// show version in case HTML didn't include it
+document.addEventListener("DOMContentLoaded", ()=>{
+  const vb = document.getElementById("verBadge");
+  if (vb) vb.textContent = BUILD_VERSION;
+});

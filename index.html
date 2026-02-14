@@ -11,7 +11,6 @@
   <meta name="theme-color" content="#111111" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
@@ -140,25 +139,11 @@ button.key .badgeWrap{
 </head>
 <body>
 <header>
-  <h1>百家輔助系統</h1>
+  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v28</span></h1>
   <div class="sub">
     僅供輔助參考，切勿沉迷。
 <div class="card">
-    <div class="row">
-      <input id="handInput" type="text" placeholder="例：12.12.6 10.12.9" autocomplete="off" autocapitalize="off" spellcheck="false" />
-      <button class="primary" id="submitBtn">送出</button>
-      <button id="undoBtn">撤回↪️</button>
-      <button id="redoBtn">恢復↩️</button>
-      <button id="resetBtn">重置牌靴🔄</button>
-      <button id="clearBtn">清除紀錄</button>
-    </div>
-    <div class="hint">
-      你也可以在輸入框直接打：<span class="mono">撤回↪️</span>、<span class="mono">恢復↩️</span>、<span class="mono">重置牌靴🔄</span>、<span class="mono">clear</span>。
-    </div>
-  
-  <div class="card" id="keypadCard">
-    <div class="row" style="margin-bottom:10px;">
-    <div class="row" style="gap:8px;">
+<div class="row" style="gap:8px;">
       <div class="box" style="flex:1;min-width:240px;">
         <div class="label">閒牌</div>
         <div class="value mono" id="pCardsDisp">（空）</div>
@@ -167,6 +152,8 @@ button.key .badgeWrap{
         <div class="label">莊牌</div>
         <div class="value mono" id="bCardsDisp">（空）</div>
       </div>
+<div id="inputStatus" class="muted" style="margin-top:6px; font-size:13px;"></div>
+
     </div>
 
     <div class="hint" style="margin-top:10px;">點牌面加入（1=A、11=J、12=Q、13=K、10=10）。每局輸入完按「送出」。</div>
@@ -214,6 +201,8 @@ button.key .badgeWrap{
       離線安裝：Safari 開啟後 → 分享 →「加入主畫面」。首次需要有網路/HTTPS載入一次，之後可離線使用。
     </div>
   </div>
+
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v28</div>
 </main>
 
 <script src="app.js"></script>
