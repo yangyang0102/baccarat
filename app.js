@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.45";
+const BUILD_VERSION = "v1.46";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -878,3 +878,39 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
 });
 
+
+
+// ---- CSV Export (v1.46 FIX) ----
+function downloadCSVForActiveTab(){
+  const cw = state.stats?.courseWins ?? 0;
+  const done = !!(state.stats && (state.stats.courseDone || cw >= 6));
+  if (!done){
+    alert("課程未完成（6/6）時不可下載紀錄");
+    return;
+  }
+  const rows = [["局號","輸入","閒點","莊點","本局勝利","上局建議","上局結果","下局建議","時間"]];
+  const ordered = [...state.log].reverse();
+  for (const r of ordered){
+    rows.push([r.n,r.input,r.pTotal,r.bTotal,r.win,r.prevPick,r.prevPickResult,r.nextPick,new Date(r.ts).toLocaleString()]);
+  }
+  const csv = "\ufeff" + rows.map(r=>r.join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const d = new Date();
+  const pad = n=>String(n).padStart(2,"0");
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  a.href = url;
+  a.download = `Monster_v1.46_Tab${activeTab}_${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  const btn = document.getElementById("downloadCsvBtn");
+  if(btn){
+    btn.addEventListener("click", downloadCSVForActiveTab);
+  }
+});
