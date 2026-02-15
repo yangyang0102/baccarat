@@ -51,7 +51,7 @@
 .card{border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);} .result-big{font-size:64px;font-weight:800;} .glow-blue{color:#4da3ff;} .glow-red{color:#ff4d4d;} .glow-green{color:#38e27d;}
 
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;margin:0;background:#0b0b0b;color:#f1f1f1}
-    header{padding:16px 16px 8px;border-bottom:1px solid #222;background:#0f0f0f;position:sticky;top:0}
+    header{padding:16px 16px 8px;border-bottom:1px solid #222;background:#0f0f0f;position:sticky;top:0;z-index:50}
     h1{font-size:18px;margin:0 0 6px}
     .sub{font-size:13px;color:#bdbdbd;line-height:1.35}
     main{padding:16px;max-width:760px;margin:0 auto}
@@ -88,7 +88,7 @@ main{
 header{
   max-width: 520px;
   margin: 0 auto;
-}
+;z-index:50}
 
 /* --- Keypad UI v1.40 (Baccarat style) --- */
 #cardPad{
@@ -182,19 +182,25 @@ button.key .badgeWrap{
 
 
 /* Tabs A-F */
-.tabbar{position:absolute;top:14px;right:12px;display:flex;gap:6px;z-index:5}
-.tabbar .tab{min-width:34px;height:28px;padding:0 10px;border-radius:999px;
-  border:1px solid rgba(255,255,255,.16);
-  background:rgba(255,255,255,.06);
-  color:#e9e9e9;font-weight:800;letter-spacing:.5px;cursor:pointer}
-.tabbar .tab.active{border-color:rgba(255,255,255,.34);background:rgba(255,255,255,.12)}
+.tabbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tabbar .tab{min-width:36px;height:30px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.10);color:#fff;font-weight:900;letter-spacing:.5px;cursor:pointer}
+.tabbar .tab.active{border-color:rgba(0,255,170,.65);background:rgba(0,255,170,.12);box-shadow:0 0 0 2px rgba(0,255,170,.12)}
 .tabbar .tab:active{transform:translateY(1px)}
+
+
+/* Header row for tabs */
+.header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.header-titles{min-width:0}
 </style>
 </head>
 <body>
 <header>
-  <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.40</span></h1>
-  <div id="tabbar" class="tabbar" aria-label="分頁">
+  <div class="header-row">
+    <div class="header-titles">
+      <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.41</span></h1>
+      <div class="sub">僅供輔助參考，切勿沉迷。</div>
+    </div>
+    <div id="tabbar" class="tabbar" aria-label="分頁">
     <button class="tab active" data-tab="A" type="button">A</button>
     <button class="tab" data-tab="B" type="button">B</button>
     <button class="tab" data-tab="C" type="button">C</button>
@@ -202,8 +208,8 @@ button.key .badgeWrap{
     <button class="tab" data-tab="E" type="button">E</button>
     <button class="tab" data-tab="F" type="button">F</button>
   </div>
-  <div class="sub">
-    僅供輔助參考，切勿沉迷。
+  </div>
+</header>
 <div class="card">
 <div class="row" style="gap:8px;">
       <div class="box" style="flex:1;min-width:240px;">
@@ -280,7 +286,7 @@ button.key .badgeWrap{
 <div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.40</div>
 </main>
 
-<script src="app.js?ver=v1.40"></script>
+<script src="app.js?ver=v1.41"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
