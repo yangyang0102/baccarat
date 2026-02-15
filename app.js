@@ -1,4 +1,5 @@
-// Build v1.42const BUILD_VERSION = "v1.42";
+// Build v28
+const BUILD_VERSION = "v1.43";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -563,6 +564,8 @@ function render(){
     }
   }
 
+  updateCourseStatusUI();
+
   renderKeypad();
 }
 
@@ -843,6 +846,78 @@ document.addEventListener("click", (e)=>{
   switchTab(btn.getAttribute("data-tab"));
 });
 document.addEventListener("DOMContentLoaded", ()=>{ updateTabUI(); });
+
+
+// ---- CSV Export (v1.43) ----
+function toIsoDateTime(ts){
+  try{
+    const d = new Date(ts || Date.now());
+    const pad = (n)=> String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  }catch{ return ""; }
+}
+function csvEscape(v){
+  const s = (v==null) ? "" : String(v);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  return s;
+}
+function buildCSVForState(st){
+  const header = ["局號","輸入","閒點","莊點","本局勝利","上局建議","上局結果","下局建議","時間"];
+  const rows = [header];
+  const log = Array.isArray(st.log) ? st.log : [];
+  const ordered = [...log].reverse();
+  for (const r of ordered){
+    rows.push([
+      r.n ?? "",
+      r.input ?? "",
+      r.pTotal ?? "",
+      r.bTotal ?? "",
+      r.win ?? "",
+      r.prevPick ?? "",
+      r.prevPickResult ?? "",
+      r.nextPick ?? "",
+      toIsoDateTime(r.ts)
+    ]);
+  }
+  return rows.map(cols => cols.map(csvEscape).join(",")).join("\n");
+}
+function downloadCSVForActiveTab(){
+  const cw = state.stats?.courseWins ?? 0;
+  const done = !!(state.stats && (state.stats.courseDone || cw >= 6));
+  if (!done){
+    alert("課程未完成（6/6）時不可下載紀錄");
+    return;
+  }
+  const csv = "\ufeff" + buildCSVForState(state);
+  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+
+  const pad = (n)=> String(n).padStart(2,"0");
+  const d = new Date();
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const filename = `Monster_v1.43_Tab${activeTab}_${dateStr}.csv`;
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+}
+function updateCourseStatusUI(){
+  const statusEl = document.getElementById("courseStatus");
+  const btn = document.getElementById("downloadCsvBtn");
+  const cw = state.stats?.courseWins ?? 0;
+  const done = !!(state.stats && (state.stats.courseDone || cw >= 6));
+  if (statusEl){
+    statusEl.textContent = done ? `課程狀態：已完成（${Math.min(cw,6)} / 6）` : `課程狀態：未完成（${Math.min(cw,6)} / 6）`;
+  }
+  if (btn){
+    btn.disabled = !done;
+    btn.textContent = `下載紀錄（${activeTab}）`;
+  }
+}
 
 // 初次載入
 render();
