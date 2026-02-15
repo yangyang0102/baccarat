@@ -1,8 +1,8 @@
-const CACHE_NAME = "monster-baccarat-v1.46";
+const CACHE_NAME = "monster-baccarat-v1.47";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?ver=1.46",
+  "./app.js?ver=1.47",
   "./favicon.ico",
   "./manifest.json",
   "./icons/icon-192.png",
