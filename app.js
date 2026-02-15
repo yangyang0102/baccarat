@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.38";
+const BUILD_VERSION = "v1.39";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -156,7 +156,8 @@ function newState(){
     stats: {
       handNo:0,
       bankerWins:0, playerWins:0, ties:0,
-      pickWins:0, pickLosses:0, pickTies:0, pickSkipped:0
+      pickWins:0, pickLosses:0, pickTies:0, pickSkipped:0,
+      courseWins:0, courseProgress:0, courseDone:false
     },
 
     log: [],
@@ -168,6 +169,36 @@ function newState(){
 }
 
 let state = loadState() ?? newState();
+
+// v1.39: course progress defaults + rebuild if missing
+function rebuildCourseProgressFromLog(){
+  let cw = 0;
+  let prog = 0;
+  // log is newest-first; iterate oldest -> newest
+  for (const r of [...state.log].reverse()){
+    const res = r.prevPickResult;
+    if (res === "贏"){
+      if (cw < 6) cw += 1;
+      prog = 0;
+    }else if (res === "輸"){
+      prog += 1;
+      if (prog >= 7) prog = 0;
+    }
+    if (cw >= 6) break;
+  }
+  state.stats.courseWins = cw;
+  state.stats.courseProgress = prog;
+  state.stats.courseDone = (cw >= 6);
+}
+
+if (state.stats.courseWins == null) state.stats.courseWins = 0;
+if (state.stats.courseProgress == null) state.stats.courseProgress = 0;
+if (state.stats.courseDone == null) state.stats.courseDone = false;
+// If these fields were not persisted before, rebuild from existing log for consistency
+if (!("courseWins" in state.stats) || !("courseProgress" in state.stats) || !("courseDone" in state.stats)){
+  rebuildCourseProgressFromLog();
+}
+
 // v17: ensure keypad seq exists
 state.keypad = state.keypad || {side:"P",p:[],b:[],seq:[]};
 state.keypad.seq = state.keypad.seq || [];
@@ -210,6 +241,23 @@ function applyHandResult(win){
   else st.ties += 1;
 }
 
+
+function updateCourseAfterPickResult(res){
+  const st = state.stats;
+  if (st.courseDone) return;
+
+  if (res === "贏"){
+    st.courseWins = (st.courseWins ?? 0) + 1;
+    if (st.courseWins >= 6){
+      st.courseWins = 6;
+      st.courseDone = true;
+    }
+    st.courseProgress = 0;
+  }else if (res === "輸"){
+    st.courseProgress = (st.courseProgress ?? 0) + 1;
+    if (st.courseProgress >= 7) st.courseProgress = 0;
+  }
+}
 function settlePendingPick(win){
   const st = state.stats;
   const pick = state.pendingPick;
@@ -223,9 +271,11 @@ function settlePendingPick(win){
   }
   if (pick === win){
     st.pickWins += 1;
+    updateCourseAfterPickResult("贏");
     return {evaluated: pick, result: "贏"};
   }else{
     st.pickLosses += 1;
+    updateCourseAfterPickResult("輸");
     return {evaluated: pick, result: "輸"};
   }
 }
@@ -447,25 +497,12 @@ function render(){
   setText("wlt", `${st.bankerWins} / ${st.playerWins} / ${st.ties}`);
   setText("pickStats", `${st.pickWins} / ${st.pickLosses} / ${st.pickTies} / ${st.pickSkipped}`);
 
-  // 近7局主注（只計贏/輸；和/略過不計入進度）
-  const q = [];
-  for (const r of [...state.log].reverse()){
-    if (r.prevPickResult === "贏") q.push(1);
-    else if (r.prevPickResult === "輸") q.push(0);
-  }
-  let progress = 0, wins = 0;
-  if (q.length){
-    const mod = q.length % 7;
-    if (mod === 0){
-      progress = 7;
-      wins = q.slice(-7).reduce((a,b)=>a+b,0);
-    }else{
-      progress = mod;
-      wins = q.slice(-mod).reduce((a,b)=>a+b,0);
-    }
-  }
-  setText("pick7", `${wins} / 7 勝`);
-  setText("pick7Prog", `進度：${progress} / 7`);
+  // 近7局主注（課程規則 v1.39：贏即重置目前進度；累積6勝=完成課程；只計贏/輸）
+  const cw = state.stats.courseWins ?? 0;
+  const prog = state.stats.courseProgress ?? 0;
+  const done = state.stats.courseDone || cw >= 6;
+  setText("pick7", done ? "完成課程" : `課程進度：${cw} / 6`);
+  setText("pick7Prog", `目前進度：${prog} / 7`);
 
   if (!state.log.length){
     setText("thisWin", "—");
