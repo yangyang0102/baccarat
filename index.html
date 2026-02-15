@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Monster百家輔助</title>
+  <title>Monster百家輔助 v1.42</title>
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
@@ -182,7 +182,7 @@ button.key .badgeWrap{
 
 
 /* Tabs A-F */
-.tabbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tabbar{display:grid;grid-template-columns:repeat(3, auto);gap:8px;justify-content:end;align-content:start}
 .tabbar .tab{min-width:36px;height:30px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.10);color:#fff;font-weight:900;letter-spacing:.5px;cursor:pointer}
 .tabbar .tab.active{border-color:rgba(0,255,170,.65);background:rgba(0,255,170,.12);box-shadow:0 0 0 2px rgba(0,255,170,.12)}
 .tabbar .tab:active{transform:translateY(1px)}
@@ -197,7 +197,7 @@ button.key .badgeWrap{
 <header>
   <div class="header-row">
     <div class="header-titles">
-      <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.41</span></h1>
+      <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.42</span></h1>
       <div class="sub">僅供輔助參考，切勿沉迷。</div>
     </div>
     <div id="tabbar" class="tabbar" aria-label="分頁">
@@ -283,10 +283,10 @@ button.key .badgeWrap{
     </div>
   </div>
 
-<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.40</div>
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.42</div>
 </main>
 
-<script src="app.js?ver=v1.41"></script>
+<script src="app.js?ver=1.42"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
