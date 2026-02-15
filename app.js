@@ -1,5 +1,5 @@
 // Build v28
-const BUILD_VERSION = "v1.39";
+const BUILD_VERSION = "v1.40";
 
 function onEvent(id, event, handler){
   const el = document.getElementById(id);
@@ -145,7 +145,15 @@ function parseHand(line){
 
 function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
-const STORAGE_KEY = "baccarat_main_only_v3";
+const STORAGE_KEY_BASE = "baccarat_main_only_v3";
+const ACTIVE_TAB_KEY = "baccarat_active_tab_v1";
+const LEGACY_STORAGE_KEY = "baccarat_main_only_v3";
+const TABS = ["A","B","C","D","E","F"];
+
+function storageKey(tab){ return `${STORAGE_KEY_BASE}__${tab}`; }
+
+let activeTab = (localStorage.getItem(ACTIVE_TAB_KEY) || "A").toUpperCase();
+if (!TABS.includes(activeTab)) activeTab = "A";
 
 function newState(){
   return {
@@ -168,8 +176,10 @@ function newState(){
   };
 }
 
-let state = loadState() ?? newState();
+migrateLegacyToAIfNeeded();
+let state = loadState(activeTab) ?? newState();
 
+function ensureStateFixups(){
 // v1.39: course progress defaults + rebuild if missing
 function rebuildCourseProgressFromLog(){
   let cw = 0;
@@ -203,16 +213,32 @@ if (!("courseWins" in state.stats) || !("courseProgress" in state.stats) || !("c
 state.keypad = state.keypad || {side:"P",p:[],b:[],seq:[]};
 state.keypad.seq = state.keypad.seq || [];
 
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
-function loadState(){
+
+ensureStateFixups();
+
+function saveState(){
+  localStorage.setItem(storageKey(activeTab), JSON.stringify(state));
+}
+function loadState(tab){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(tab));
     if (!raw) return null;
     return JSON.parse(raw);
   }catch{ return null; }
 }
+
+function migrateLegacyToAIfNeeded(){
+  try{
+    const hasA = localStorage.getItem(storageKey("A"));
+    if (hasA) return;
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!legacy) return;
+    localStorage.setItem(storageKey("A"), legacy);
+    // optional: keep legacy as backup; do not remove
+  }catch{}
+}
+
 
 function snapshot(){
   return {
@@ -787,6 +813,37 @@ onEvent("clearBothBtn","click", ()=>{
 onEvent("submitKeypadBtn","click", ()=>{
   try{ keypadSubmit(); }catch(e){ alert(e.message || String(e)); }
 });
+
+
+function updateTabUI(){
+  const bar = document.getElementById("tabbar");
+  if (!bar) return;
+  for (const btn of bar.querySelectorAll("button[data-tab]")){
+    const t = (btn.getAttribute("data-tab")||"").toUpperCase();
+    btn.classList.toggle("active", t === activeTab);
+  }
+}
+function switchTab(tab){
+  const t = (tab||"").toUpperCase();
+  if (!TABS.includes(t) || t === activeTab) return;
+  // save current
+  saveState();
+  activeTab = t;
+  localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+  // load new
+  state = loadState(activeTab) ?? newState();
+  ensureStateFixups();
+  updateTabUI();
+  renderKeypad();
+  render();
+}
+// bind tab clicks
+document.addEventListener("click", (e)=>{
+  const btn = e.target && e.target.closest ? e.target.closest("#tabbar button[data-tab]") : null;
+  if (!btn) return;
+  switchTab(btn.getAttribute("data-tab"));
+});
+document.addEventListener("DOMContentLoaded", ()=>{ updateTabUI(); });
 
 // 初次載入
 render();
