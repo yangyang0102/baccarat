@@ -47,7 +47,7 @@
 .hand-meta{font-size:13px;opacity:.82;}
 
 
-/* UI polish v1.44 */
+/* UI polish v1.45 */
 .card{border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);} .result-big{font-size:64px;font-weight:800;} .glow-blue{color:#4da3ff;} .glow-red{color:#ff4d4d;} .glow-green{color:#38e27d;}
 
     body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans TC",Helvetica,Arial,sans-serif;margin:0;background:#0b0b0b;color:#f1f1f1}
@@ -90,7 +90,7 @@ header{
   margin: 0 auto;
 ;z-index:50}
 
-/* --- Keypad UI v1.44 (Baccarat style) --- */
+/* --- Keypad UI v1.45 (Baccarat style) --- */
 #cardPad{
   display:grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -186,8 +186,7 @@ button.key .badgeWrap{
   display:grid;
   grid-template-columns:repeat(3, 1fr);
   gap:8px;
-  justify-content:end;
-  align-content:start;
+  justify-content:end; /* 靠右 */
 }
 .tabbar .tab{min-width:36px;height:30px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.10);color:#fff;font-weight:900;letter-spacing:.5px;cursor:pointer}
 .tabbar .tab.active{border-color:rgba(0,255,170,.65);background:rgba(0,255,170,.12);box-shadow:0 0 0 2px rgba(0,255,170,.12)}
@@ -203,7 +202,7 @@ button.key .badgeWrap{
 <header>
   <div class="header-row">
     <div class="header-titles">
-      <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.41</span></h1>
+      <h1>百家輔助系統 <span id="verBadge" style="font-size:14px; font-weight:700; opacity:.75;">v1.45</span></h1>
       <div class="sub">僅供輔助參考，切勿沉迷。</div>
     </div>
     <div id="tabbar" class="tabbar" aria-label="分頁">
@@ -289,10 +288,10 @@ button.key .badgeWrap{
     </div>
   </div>
 
-<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.40</div>
+<div id="buildInfo" class="muted" style="text-align:center; font-size:12px; opacity:.6; padding:10px 0;">Build: v1.45</div>
 </main>
 
-<script src="app.js?ver=1.44"></script>
+<script src="app.js?ver=1.45"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));

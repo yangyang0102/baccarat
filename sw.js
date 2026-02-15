@@ -1,8 +1,8 @@
-const CACHE_NAME = "monster-baccarat-v1.44";
+const CACHE_NAME = "monster-baccarat-v1.45";
 const ASSETS = [
   "./",
   "./index.html",
-  "./app.js?ver=1.44",
+  "./app.js?ver=1.45",
   "./favicon.ico",
   "./manifest.json",
   "./icons/icon-192.png",
@@ -28,13 +28,29 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   event.respondWith((async ()=>{
-    const cached = await caches.match(event.request);
+    const req = event.request;
+
+    // Network-first for HTML navigations to avoid stale UI (v1.45)
+    const accept = req.headers.get("accept") || "";
+    if (req.mode === "navigate" || accept.includes("text/html")){
+      try{
+        const fresh = await fetch(req);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(req, fresh.clone());
+        return fresh;
+      }catch{
+        const cached = await caches.match(req);
+        return cached || caches.match("./index.html");
+      }
+    }
+
+    // Default: cache-first for static assets
+    const cached = await caches.match(req);
     if (cached) return cached;
     try{
-      const res = await fetch(event.request);
+      const res = await fetch(req);
       return res;
     }catch{
-      // offline fallback
       return caches.match("./index.html");
     }
   })());
